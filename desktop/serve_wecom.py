@@ -160,8 +160,6 @@ def run_service():
         while not (server.started and adapter_server.started):
             if server.should_exit or adapter_server.should_exit: return
             time.sleep(.1)
-        # 窗口在发布 ready 之后才会显示，先把它摆到屏幕中央，避免出现“先左下角再跳到中间”
-        centered = center_launcher_window_once()
         # This state contains no token and is useful to local integration clients.
         try:
             publish_ready(DATA / 'wecom-runtime.json', ready, port, adapter_port)
@@ -170,8 +168,6 @@ def run_service():
             traceback.print_exc()
             server.should_exit=True
             return
-        if centered:
-            threading.Thread(target=watch_launcher_window, args=(centered[0],), daemon=True).start()
         import faulthandler
         faulthandler.cancel_dump_traceback_later()
         print('startup: service-listening %.3fs'%(time.monotonic()-started),file=sys.stderr,flush=True)

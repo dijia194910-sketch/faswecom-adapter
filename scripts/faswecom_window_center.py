@@ -1,7 +1,7 @@
-"""让 faswecom 主窗口在刚启动时就直接出现在屏幕中央（不经过左下角）。
+"""faswecom 启动辅助：窗口一出现就居中，并把 WebView 子窗口摆正。
 
-由计划任务在登录时常驻运行；只对“进程刚创建 20 秒内”显示的窗口做居中，
-避免用户自己拖动过的窗口被反复拉回中间。
+背景：启动器在窗口被外部移动后，会把 WebView 放到“窗体原点”而不是客户区原点，
+导致界面整体右下偏移。这里在窗口显示时居中，并在 WebView 子窗口出现后把它摆回客户区。
 """
 import ctypes
 import time
@@ -10,25 +10,33 @@ from ctypes import wintypes as w
 import psutil
 
 user32 = ctypes.WinDLL('user32', use_last_error=True)
-kernel32 = ctypes.WinDLL('kernel32', use_last_error=True)
 
 EVENT_OBJECT_SHOW = 0x8002
-EVENT_OBJECT_LOCATIONCHANGE = 0x800B
 WINEVENT_OUTOFCONTEXT = 0x0000
 WINEVENT_SKIPOWNPROCESS = 0x0002
 
 WinEventProc = ctypes.WINFUNCTYPE(None, w.HANDLE, w.DWORD, w.HWND, w.LONG, w.LONG, w.DWORD, w.DWORD)
+_proc = None
 
-marks = {}
-proc = None
+
+def _pid_of(hwnd):
+    import win32process
+    return win32process.GetWindowThreadProcessId(hwnd)[1]
+
+
+def _is_form(hwnd):
+    try:
+        import win32gui
+        if (psutil.Process(_pid_of(hwnd)).name() or '').lower() != 'faswecom.exe':
+            return False
+        return win32gui.GetClassName(hwnd).startswith('WindowsForms10.Window.8')
+    except Exception:
+        return False
 
 
 def _center(hwnd):
     try:
         import win32api, win32con, win32gui
-    except Exception:
-        return
-    try:
         left, top, right, bottom = win32gui.GetWindowRect(hwnd)
         width, height = right - left, bottom - top
         if width < 500 or height < 400:
@@ -44,43 +52,52 @@ def _center(hwnd):
         pass
 
 
-def _is_fresh(hwnd):
-    try:
-        import win32gui, win32process
-        pid = win32process.GetWindowThreadProcessId(hwnd)[1]
-        p = psutil.Process(pid)
-        if (p.name() or '').lower() != 'faswecom.exe':
-            return False
-        cls = win32gui.GetClassName(hwnd)
-        if not cls.startswith('WindowsForms10.Window.8'):
-            return False
-        return (time.time() - p.create_time()) < 20
-    except Exception:
-        return False
+def _fix_webview(hwnd):
+    """把 WebView 子窗口放回客户区左上角，尺寸与客户区一致。"""
+    import win32con
+    import win32gui
+    deadline = time.time() + 4
+    while time.time() < deadline:
+        try:
+            _, _, cw, ch = win32gui.GetClientRect(hwnd)
+            children = []
+            def visit(c, _):
+                try:
+                    if win32gui.GetClassName(c) == 'Chrome_WidgetWin_1':
+                        children.append(c)
+                except Exception:
+                    pass
+                return True
+            win32gui.EnumChildWindows(hwnd, visit, None)
+            for child in children:
+                left, top, right, bottom = win32gui.GetWindowRect(child)
+                if (left, top) != (0, 0) or (right - left, bottom - top) != (cw, ch):
+                    win32gui.SetWindowPos(child, 0, 0, 0, cw, ch,
+                        win32con.SWP_NOZORDER | win32con.SWP_NOACTIVATE)
+            if children:
+                return
+        except Exception:
+            pass
+        time.sleep(0.05)
 
 
 def _callback(hook, event, hwnd, id_object, id_child, thread, ms):
     try:
-        if not hwnd or not _is_fresh(hwnd):
+        if not hwnd or not _is_form(hwnd):
             return
-        if event == EVENT_OBJECT_SHOW:
-            _center(hwnd)
-            marks[hwnd] = time.time() + 2.0
-        elif event == EVENT_OBJECT_LOCATIONCHANGE and hwnd in marks and time.time() < marks[hwnd]:
-            _center(hwnd)
+        if not user32.IsWindowVisible(hwnd):
+            return
+        _center(hwnd)
+        _fix_webview(hwnd)
     except Exception:
         pass
 
 
 def main():
-    global proc
-    proc = WinEventProc(_callback)
-    hooks = [
-        user32.SetWinEventHook(EVENT_OBJECT_SHOW, EVENT_OBJECT_SHOW, 0, proc, 0, 0,
-                               WINEVENT_OUTOFCONTEXT | WINEVENT_SKIPOWNPROCESS),
-        user32.SetWinEventHook(EVENT_OBJECT_LOCATIONCHANGE, EVENT_OBJECT_LOCATIONCHANGE, 0, proc, 0, 0,
-                               WINEVENT_OUTOFCONTEXT | WINEVENT_SKIPOWNPROCESS),
-    ]
+    global _proc
+    _proc = WinEventProc(_callback)
+    user32.SetWinEventHook(EVENT_OBJECT_SHOW, EVENT_OBJECT_SHOW, 0, _proc, 0, 0,
+                           WINEVENT_OUTOFCONTEXT | WINEVENT_SKIPOWNPROCESS)
     msg = w.MSG()
     while user32.GetMessageW(ctypes.byref(msg), 0, 0, 0) > 0:
         user32.TranslateMessage(ctypes.byref(msg))
