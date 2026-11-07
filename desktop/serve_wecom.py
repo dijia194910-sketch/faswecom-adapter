@@ -20,6 +20,62 @@ def publish_ready(runtime, ready, port, adapter_port):
     atomic_json(ready, dict(url=f'http://127.0.0.1:{port}', pid=os.getpid()))
 
 
+def center_launcher_window():
+    """把 launcher（faswecom.exe）的主窗口在首次显示时移动到屏幕中央。"""
+    try:
+        import psutil, win32api, win32con, win32gui, win32process
+    except Exception:
+        return
+    target = None
+    for proc in psutil.process_iter(['pid', 'name']):
+        try:
+            if (proc.info['name'] or '').lower() == 'faswecom.exe':
+                target = proc.info['pid']
+                break
+        except Exception:
+            continue
+    if target is None:
+        return
+    while True:
+        found = []
+        def visit(hwnd, _):
+            try:
+                if win32process.GetWindowThreadProcessId(hwnd)[1] != target:
+                    return True
+                if not win32gui.IsWindowVisible(hwnd) or win32gui.IsIconic(hwnd):
+                    return True
+                cls = win32gui.GetClassName(hwnd)
+                if not cls.startswith('WindowsForms10.Window.8') and 'faswecom' not in win32gui.GetWindowText(hwnd).lower():
+                    return True
+                left, top, right, bottom = win32gui.GetWindowRect(hwnd)
+                if right - left < 500 or bottom - top < 400:
+                    return True
+                found.append(hwnd)
+            except Exception:
+                pass
+            return True
+        try:
+            win32gui.EnumWindows(visit, None)
+        except Exception:
+            pass
+        if found:
+            hwnd = found[0]
+            try:
+                left, top, right, bottom = win32gui.GetWindowRect(hwnd)
+                width, height = right - left, bottom - top
+                monitor = win32api.MonitorFromWindow(hwnd, win32con.MONITOR_DEFAULTTOPRIMARY)
+                work = win32api.GetMonitorInfo(monitor)['Work']
+                x = work[0] + (work[2] - work[0] - width) // 2
+                y = work[1] + (work[3] - work[1] - height) // 2
+                if (left, top) != (x, y):
+                    win32gui.SetWindowPos(hwnd, 0, x, y, 0, 0,
+                        win32con.SWP_NOSIZE | win32con.SWP_NOZORDER | win32con.SWP_NOACTIVATE)
+            except Exception:
+                pass
+            return
+        time.sleep(0.5)
+
+
 def run_service():
     started=time.monotonic()
     from fastapi import HTTPException, Request
@@ -79,6 +135,7 @@ def run_service():
             traceback.print_exc()
             server.should_exit=True
             return
+        threading.Thread(target=center_launcher_window, daemon=True).start()
         import faulthandler
         faulthandler.cancel_dump_traceback_later()
         print('startup: service-listening %.3fs'%(time.monotonic()-started),file=sys.stderr,flush=True)
