@@ -2,9 +2,9 @@ html,body{height:100%!important;overflow:hidden!important}
 body.embed{display:flex!important;flex-direction:row!important;margin:0!important;width:100%!important;max-width:none!important;grid-template-columns:none!important}
 body.embed .sidebar{display:none!important}
 body.embed .rail-splitter{display:none!important}
-body.embed header{display:none!important}
-body.embed.embed-chat .list-panel{flex:0 0 300px!important;width:300px!important;height:100%!important;max-width:none!important}
+body.embed.embed-page header{display:none!important}
+body.embed.embed-chat .list-panel{flex:0 0 var(--chat-list-w,300px)!important;width:var(--chat-list-w,300px)!important;height:100%!important;max-width:none!important;min-width:0!important}
 body.embed.embed-chat .chat-main{flex:1 1 auto!important;min-width:0!important;display:flex!important;flex-direction:column!important;height:100%!important}
-body.embed.embed-console .list-panel{flex:0 0 300px!important;width:300px!important;height:100%!important;max-width:none!important}
+body.embed.embed-console .list-panel{flex:0 0 var(--console-list-w,300px)!important;width:var(--console-list-w,300px)!important;height:100%!important;max-width:none!important;min-width:0!important}
 body.embed.embed-console .workspace{flex:1 1 auto!important;min-width:0!important;height:100%!important;max-width:none!important;margin:0!important;overflow-y:auto!important}
 body.embed.embed-page main{flex:1 1 auto!important;min-width:0!important;height:100%!important;max-width:none!important;margin:0!important;width:auto!important;overflow-y:auto!important;padding:20px 24px 40px!important}
