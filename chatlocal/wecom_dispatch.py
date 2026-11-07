@@ -65,6 +65,8 @@ class Dispatches:
         backend=backend or cfg.get('backend')
         if backend not in ('native','desktop_ocr','background_window') and not (backend=='desktop_file' and _file and owner=='console'):raise ValueError('发送方式无效')
         target=Recipients(self.store).send_target(rid,self.plan(owner),backend=backend)
+        blocked={b.get('id') for b in (cfg.get('blocked') or []) if isinstance(b,dict)}
+        if target.get('id') in blocked:raise ValueError('此联系人已被加入不可发送名单，请到 模型与配置 - 发送目标 修改')
         if owner.startswith('auto:'):
             from .wecom_reply import validate_auto
             validate_auto(self.store,owner,recipient=rid,message=message,backend=backend)
@@ -98,6 +100,8 @@ class Dispatches:
             from .wecom_chat import ChatFiles
             expected=json.loads(row['message']);actual,_=ChatFiles(self.store).get(expected['file_id'])
             if actual!=expected:raise ValueError('附件内容已改变')
+        if target.get('id') in {b.get('id') for b in (cfg.get('blocked') or []) if isinstance(b,dict)}:
+            raise ValueError('此联系人已被加入不可发送名单，请到 模型与配置 - 发送目标 修改')
         current=Recipients(self.store).send_target(target['id'],self.plan(row['owner']),backend=row['backend'],hint=target)
         if current['name']!=target['name']:raise ValueError('接收人显示名已改变，请重新核对')
         return row,target

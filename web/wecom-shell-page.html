@@ -7,7 +7,7 @@
 <link rel="icon" href="/ui/wecom/wecom-logo.jpg" type="image/jpeg">
 <link rel="stylesheet" href="/ui/wecom/wecom.css">
 <link rel="stylesheet" href="/ui/wecom/wecom-accounts.css">
-<link rel="stylesheet" href="/ui/wecom/wecom-shell.css?v=20261107m">
+<link rel="stylesheet" href="/ui/wecom/wecom-shell.css?v=20261107p">
 <style>
 html,body{height:100%;margin:0}
 body{overflow:hidden}
@@ -32,13 +32,12 @@ iframe#frame.loaded{opacity:1}
 <div class="shell-bottom">
 <label class="takeover"><input type="checkbox" id="rail-takeover"><span>智能客服接管</span></label>
 <p class="takeover-state" id="rail-takeover-state">正在读取…</p>
-<a href="/console?send=1" class="shell-send">发送权限设置</a>
 <p class="meta">本地运行 · 仅本机访问</p>
 </div>
 </aside>
 <main class="frame-wrap"><iframe id="frame"></iframe></main>
 <script src="/ui/wecom/wecom-accounts.js"></script>
-<script src="/ui/wecom/wecom-shell.js?v=20261107m"></script>
+<script src="/ui/wecom/wecom-shell.js?v=20261107p"></script>
 <script>
 (function(){
   var frame=document.getElementById('frame');
@@ -50,7 +49,7 @@ iframe#frame.loaded{opacity:1}
     return '/';
   }
   function linkKey(a){try{var p=new URL(a.href,location.href).pathname.replace(/^\/w\/(legacy|[a-f0-9]{64})/,'')||'/';return keyOf(p);}catch(e){return keyOf(a.getAttribute('href')||'/');}}
-  function setActive(key){links.forEach(function(a){var on=linkKey(a)===key;a.classList.toggle('active',on);if(on)a.setAttribute('aria-current','page');else a.removeAttribute('aria-current');});}
+  function setActive(key){document.body.classList.toggle('chat-view', key==='/chat');links.forEach(function(a){var on=linkKey(a)===key;a.classList.toggle('active',on);if(on)a.setAttribute('aria-current','page');else a.removeAttribute('aria-current');});}
   function embedCss(key){return ''}
   function inject(doc,key){
     try{

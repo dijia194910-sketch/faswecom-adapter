@@ -25,6 +25,7 @@ from .normalize import display_time
 from .retrieval import make_plan, retrieve
 from .wecom_adapter import configuration, initialize_config, text_message
 from .wecom_models import ModelCatalog
+from .wecom_recipients import Recipients
 
 
 class Console:
@@ -78,6 +79,7 @@ class Console:
             profiles=profile_catalog(), send_enabled=cfg.get('send_enabled') is True,
             ai_takeover=cfg.get('ai_takeover') is not False,
             backend=cfg.get('backend'), targets=[dict(id=k, **v) for k,v in cfg['targets'].items()],
+            blocked=[dict(b) for b in (cfg.get('blocked') or []) if isinstance(b,dict)],
             active_job=next((j['id'] for j in self.jobs.values() if j['state']=='running'), None))
 
     def model_balance(self, model_id):
@@ -259,6 +261,100 @@ class Console:
             os.replace(temporary,self.config_path)
         finally: temporary.unlink(missing_ok=True)
 
+    def set_send_enabled(self, body):
+        """全局发送总开关：关闭时同时撤销所有 MCP 连接的代发权限。"""
+        if set(body) - {'enabled'} or type(body.get('enabled')) is not bool:
+            raise ValueError('发送开关参数无效')
+        enabled = body['enabled']
+        with self.config_lock:
+            cfg = configuration(self.config_path)
+            if enabled:
+                if cfg.get('backend') not in ('native', 'desktop_ocr', 'background_window'):
+                    raise ValueError('请先添加一个手动发送目标并选择发送方式')
+                cfg['send_enabled'] = True
+            else:
+                cfg['send_enabled'] = False
+                cfg['send_generation'] = cfg.get('send_generation', 0) + 1
+                from .mcp_access import MCPAccess
+                access = MCPAccess(self.store)
+                with access.connect() as db:
+                    for row in db.execute('SELECT id,scope FROM grants WHERE revoked=0').fetchall():
+                        scope = json.loads(row['scope'])
+                        if 'wecom' in scope.get('platforms', []) and scope.get('send'):
+                            scope['send'] = False
+                            db.execute('UPDATE grants SET scope=? WHERE id=?', (json.dumps(scope, ensure_ascii=False), row['id']))
+            self.save_adapter(cfg)
+        return dict(send_enabled=enabled)
+
+    def set_target_enabled(self, target_id, body):
+        if set(body) - {'enabled'} or type(body.get('enabled')) is not bool:
+            raise ValueError('目标状态参数无效')
+        with self.config_lock:
+            cfg = configuration(self.config_path)
+            target = cfg['targets'].get(target_id)
+            if target is None:
+                raise ValueError('目标不存在')
+            target['enabled'] = body['enabled']
+            self.save_adapter(cfg)
+        return dict(target_id=target_id, enabled=body['enabled'])
+
+    def delete_target(self, target_id, body):
+        if body:
+            raise ValueError('参数无效')
+        with self.config_lock:
+            cfg = configuration(self.config_path)
+            if target_id not in cfg['targets']:
+                raise ValueError('目标不存在')
+            cfg['targets'].pop(target_id)
+            self.save_adapter(cfg)
+        return dict(deleted=True)
+
+    def recipient_choices(self):
+        from .wecom_desktop import display_name
+        rows = Recipients(self.store).rows()
+        out = [dict(id=r['id'], name=r['name'], kind=r['kind'], account=r.get('account') or '')
+               for r in rows if r.get('id') and r.get('name')]
+        out.sort(key=lambda x: (x['kind'] != 'private', display_name(x['name'])))
+        return dict(recipients=out[:2000], total=len(out))
+
+    def add_blocked(self, body):
+        from .wecom_desktop import display_name
+        rows = Recipients(self.store).rows()
+        if set(body) == {'id'}:
+            match = next((r for r in rows if r.get('id') == body['id']), None)
+            if match is None:
+                raise ValueError('联系人不存在，请刷新列表后重试')
+        elif set(body) - {'name', 'kind'} == set() and body.get('kind') in ('private', 'group'):
+            name = body.get('name')
+            if not isinstance(name, str) or not 1 <= len(name.strip()) <= 100 or any(ord(c) < 32 for c in name):
+                raise ValueError('请填写准确的企微显示名')
+            matches = [r for r in rows if display_name(r['name']) == display_name(name.strip()) and r['kind'] == body['kind']]
+            if not matches:
+                raise ValueError('未找到该联系人，请先同步聊天或填写准确的显示名')
+            if len(matches) > 1:
+                raise ValueError('存在同名联系人，请先在企微里设置唯一备注名')
+            match = matches[0]
+        else:
+            raise ValueError('参数无效')
+        entry = dict(id=match['id'], name=match['name'], kind=match['kind'], native_id=match.get('native_id') or '')
+        with self.config_lock:
+            cfg = configuration(self.config_path)
+            blocked = [b for b in (cfg.get('blocked') or []) if isinstance(b, dict) and b.get('id') != entry['id']]
+            blocked.append(entry)
+            cfg['blocked'] = blocked
+            self.save_adapter(cfg)
+        return dict(blocked=blocked)
+
+    def remove_blocked(self, target_id, body):
+        if body:
+            raise ValueError('参数无效')
+        with self.config_lock:
+            cfg = configuration(self.config_path)
+            cfg['blocked'] = [b for b in (cfg.get('blocked') or []) if isinstance(b, dict) and b.get('id') != target_id]
+            self.save_adapter(cfg)
+            blocked = cfg['blocked']
+        return dict(blocked=blocked)
+
     def send(self, body):
         if set(body)-{'target_id','message','idempotency_key','approved'} or body.get('approved') is not True:
             raise ValueError('请在操作台核对接收人和正文后点击确认发送')
@@ -373,8 +469,32 @@ def install_console_routes(app, store, local, *, root=ROOT, runner=None, adapter
         if jid in console.jobs: console.jobs[jid]['stop'].set()
         return dict(stopping=True)
 
+    @app.get('/api/wecom/console/recipients')
+    def recipients(request:Request):
+        local(request);return guarded(console.recipient_choices)
+
+    @app.post('/api/wecom/console/blocked')
+    def blocked_add(request:Request,body:dict):
+        local(request,True);return guarded(console.add_blocked,body)
+
+    @app.post('/api/wecom/console/blocked/{target_id}/delete')
+    def blocked_remove(request:Request,target_id:str,body:dict):
+        local(request,True);return guarded(console.remove_blocked,target_id,body)
+
     @app.post('/api/wecom/console/targets')
     def authorize(request:Request,body:dict): local(request,True);return guarded(console.authorize,body)
+
+    @app.put('/api/wecom/console/send-enabled')
+    def send_enabled(request:Request,body:dict):
+        local(request,True);return guarded(console.set_send_enabled,body)
+
+    @app.post('/api/wecom/console/targets/{target_id}/enabled')
+    def target_enabled(request:Request,target_id:str,body:dict):
+        local(request,True);return guarded(console.set_target_enabled,target_id,body)
+
+    @app.post('/api/wecom/console/targets/{target_id}/delete')
+    def target_delete(request:Request,target_id:str,body:dict):
+        local(request,True);return guarded(console.delete_target,target_id,body)
 
     @app.post('/api/wecom/console/disable-sending')
     def disable(request:Request,body:dict):

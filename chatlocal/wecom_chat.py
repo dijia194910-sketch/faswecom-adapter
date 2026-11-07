@@ -103,6 +103,9 @@ def install_chat(app,store,local,sources=None):
                 rid=identity('person',cid.split(':',1)[0]+':'+native)
         target=Recipients(store).get(rid)
         if cid not in target['conversation_ids']:raise ValueError('接收人与会话不一致')
+        from .wecom_adapter import configuration
+        cfg=configuration(store.path.parent/'wecom-adapter.json')
+        target['blocked']=any(isinstance(b,dict) and b.get('id')==rid for b in (cfg.get('blocked') or []))
         return target
 
     from .wecom_reply import Replies

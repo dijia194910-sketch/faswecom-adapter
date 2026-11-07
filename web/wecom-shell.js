@@ -136,16 +136,7 @@
         if (button) { event.preventDefault(); button.click(); }
       });
     }
-    const modelButton = document.getElementById('open-model');
-    if (modelButton && !sidebar.querySelector('.shell-model')) {
-      const model = document.createElement('a');
-      model.href = '/console';
-      model.className = 'shell-model';
-      model.textContent = '模型设置';
-      model.addEventListener('click', event => { event.preventDefault(); modelButton.click(); });
-      const meta = sidebar.querySelector('.shell-bottom .meta');
-      if (meta) meta.before(model); else sidebar.querySelector('.shell-bottom')?.appendChild(model);
-    }
+    
   }
 
   function wireRailSplitter(sidebar) {

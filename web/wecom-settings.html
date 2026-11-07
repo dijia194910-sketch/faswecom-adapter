@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="zh-CN"><head><link rel="stylesheet" href="/ui/wecom/wecom-boot.css?v=1"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>faswecom · 模型与配置</title><link rel="icon" href="/ui/wecom/wecom-logo.jpg" type="image/jpeg"><link rel="stylesheet" href="/ui/wecom/wecom.css"><link rel="stylesheet" href="/ui/wecom/wecom-accounts.css"><link rel="stylesheet" href="/ui/wecom/wecom-shell.css?v=20261107l"><style>
+<html lang="zh-CN"><head><link rel="stylesheet" href="/ui/wecom/wecom-boot.css?v=1"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>faswecom · 模型与配置</title><link rel="icon" href="/ui/wecom/wecom-logo.jpg" type="image/jpeg"><link rel="stylesheet" href="/ui/wecom/wecom.css"><link rel="stylesheet" href="/ui/wecom/wecom-accounts.css"><link rel="stylesheet" href="/ui/wecom/wecom-shell.css?v=20261107p"><style>
 .model-row{display:flex;justify-content:space-between;gap:12px;align-items:center;border:1px solid #e1e7de;border-radius:12px;padding:12px 14px;margin:10px 0;background:#fff;flex-wrap:wrap}
 .model-row.current{border-color:#175c3d;box-shadow:inset 0 0 0 1px #175c3d}
 .model-row .model-name{font-size:14px;font-weight:600;color:#24332e}
@@ -28,7 +28,29 @@
 #mcp-create-dialog input[type=text],#mcp-create-dialog input[type=number],#mcp-create-dialog input:not([type]){width:100%}
 #mcp-create-dialog .dialog-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px}
 #mcp-create-dialog .dialog-actions{display:flex;justify-content:flex-end;gap:10px;margin-top:16px}
-.conn-title{margin:22px 0 8px;font-size:15px}</style></head>
+.conn-title{margin:22px 0 8px;font-size:15px}.target-row{display:flex;justify-content:space-between;align-items:center;gap:12px;border:1px solid #e1e7de;border-radius:12px;padding:10px 14px;margin:8px 0;background:#fff;flex-wrap:wrap}
+.target-row.off{opacity:.6}
+.target-name{font-size:14px;font-weight:600;color:#24332e}
+.target-meta{font-size:12px;color:#6b7d74;margin-top:2px}
+.target-actions{display:flex;gap:8px;align-items:center}
+.combo{position:relative}
+.combo input{width:100%}
+.combo-list{position:absolute;left:0;right:0;top:100%;z-index:20;max-height:240px;overflow-y:auto;background:#fff;border:1px solid #e1e7de;border-radius:10px;box-shadow:0 8px 24px rgba(20,50,35,.12);margin-top:4px}
+.combo-item{padding:8px 12px;cursor:pointer;font-size:13px;display:flex;align-items:center;gap:8px;justify-content:flex-start}
+.combo-item input[type=checkbox]{width:16px!important;height:16px!important;min-width:16px;flex:0 0 auto;margin:0;padding:0}
+.combo-item > span{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.combo-item:hover{background:#eef3ef}
+.combo-item .tag{font-size:11px;color:#6b7d74}
+.table-wrap{max-height:320px;overflow-y:auto;border:1px solid #e1e7de;border-radius:12px;background:#fff}
+.blocked-table{width:100%;border-collapse:collapse;font-size:13px}
+.blocked-table th{position:sticky;top:0;background:#f4f7f4;text-align:left;padding:9px 12px;font-weight:600;color:#3c4a43;border-bottom:1px solid #e1e7de;z-index:1}
+.blocked-table td{padding:9px 12px;border-bottom:1px solid #eef1ee;color:#24332e}
+.blocked-table tr:last-child td{border-bottom:0}
+.blocked-table .empty-cell{color:#6b7d74;text-align:center;padding:16px}
+.blocked-table .check-col{width:36px}
+.blocked-table input[type=checkbox]{width:15px;height:15px;cursor:pointer}
+#blocked-remove-selected{margin-top:8px}
+</style></head>
 <body>
 <aside class="sidebar">
 <div class="brand"><img src="/ui/wecom/wecom-logo.jpg" alt="faswecom"><h1>faswecom<span>企业微信</span></h1></div>
@@ -42,7 +64,6 @@
 <div class="shell-bottom">
 <label class="takeover"><input type="checkbox" id="rail-takeover"><span>智能客服接管</span></label>
 <p class="takeover-state" id="rail-takeover-state">正在读取…</p>
-<a href="/console?send=1" class="shell-send">发送权限设置</a>
 <p class="meta">本地运行 · 仅本机访问</p>
 </div>
 <div class="rail-splitter" role="separator" aria-orientation="vertical" tabindex="0" title="拖动调整侧边栏宽度"></div>
@@ -65,6 +86,19 @@
 <button id="model-delete" class="link danger" hidden>删除此模型</button>
 <p id="model-msg" class="hint" role="status"></p>
 </div></section>
+<section class="panel" id="send-panel"><div class="section-head"><div><h2>发送总开关 / 不可发送名单</h2><p>全局控制适配器能否发送消息；名单内的联系人不可发送，智能客服也不会回复他们。MCP 连接的“直接发送”仍受这里的总开关与名单约束。</p></div><span id="send-state" class="badge">读取中…</span></div>
+<label class="consent"><input id="send-enabled" type="checkbox">允许适配器发送消息（总开关），默认所有联系人都可以发送</label>
+<p class="hint">关闭后：手动发送、MCP 代发、自动回复全部停止，并撤销所有 MCP 连接的代发权限（只读不受影响）。</p>
+<h3 class="conn-title">添加不可发送联系人</h3>
+<div class="combo"><input id="blocked-search" placeholder="输入姓名或群名搜索，点击选择" autocomplete="off"><div id="blocked-options" class="combo-list" hidden></div></div>
+<div id="blocked-selected" class="hint">尚未选择联系人</div>
+<p class="hint">加入名单后，手动发送、MCP 代发、智能客服自动回复都会被拒绝（聊天页仍显示该会话，但发送按钮会禁用并提示）。</p>
+<p id="send-msg" class="hint" role="status"></p>
+<button id="blocked-add" class="primary" disabled>添加到不可发送名单</button>
+<h3 class="conn-title">不可发送名单 <small>（最多显示 320px 高，可滚动）</small></h3>
+<div class="table-wrap"><table class="blocked-table"><thead><tr><th class="check-col"><input id="blocked-all" type="checkbox" aria-label="全选"></th><th>名称</th><th>类型</th><th>操作</th></tr></thead><tbody id="blocked-list"></tbody></table></div>
+<button id="blocked-remove-selected" class="secondary" disabled>移出选中</button>
+</section>
 <section class="panel"><div class="section-head"><div><h2>连接 Codex / 其他 Agent</h2><p>每个 Agent 一个独立连接；权限只对“新建连接”生效，不会改动已建立的连接。</p></div><span id="mcp-state" class="badge">尚未开启</span></div>
 <p class="hint" id="mcp-port-info">MCP 端口：18778（全局，所有连接共用）</p>
 <p class="hint">点击下面的按钮新建连接，会弹出窗口填写连接名称、端口和权限；创建后可在下方“连接记录”里查看历史。</p>
@@ -86,5 +120,5 @@
 <div id="notice" role="alert" hidden></div>
 <script src="/ui/wecom/wecom-accounts.js"></script>
 <script src="/ui/wecom/wecom-settings.js"></script>
-<script src="/ui/wecom/wecom-shell.js?v=20261107l"></script>
+<script src="/ui/wecom/wecom-shell.js?v=20261107p"></script>
 </body></html>

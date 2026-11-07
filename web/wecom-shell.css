@@ -80,3 +80,11 @@ body.shell-page .panel,body.shell-page .stats>div{background:#fff;border:1px sol
 body.shell-page{color-scheme:light}
 body.shell-chat:not(.chat-open) .chat-composer{display:none}
 body.shell-page main{overflow-y:auto;min-height:0}
+/* 智能客服接管只在聊天页显示 */
+body.shell-console .shell-bottom .takeover,body.shell-console .shell-bottom .takeover-state,
+body.shell-page .shell-bottom .takeover,body.shell-page .shell-bottom .takeover-state{display:none!important}
+body.chat-view .shell-bottom .takeover{display:flex!important}
+body.chat-view .shell-bottom .takeover-state{display:block!important}
+/* 整页模式下内容区可滚动，避免长页面被裁掉 */
+body.shell-page main{height:100vh;min-height:0;overflow-y:auto}
+.blocked-note{margin:0 16px 8px;padding:10px 12px;border-radius:10px;background:#fdecea;color:#9a3b32;font-size:13px;border:1px solid #f3c9c4}
