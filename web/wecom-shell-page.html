@@ -49,7 +49,8 @@ iframe#frame.loaded{opacity:1}
     if(path.indexOf('/chat')===0)return '/chat';
     return '/';
   }
-  function setActive(key){links.forEach(function(a){var on=a.getAttribute('href')===key;a.classList.toggle('active',on);if(on)a.setAttribute('aria-current','page');else a.removeAttribute('aria-current');});}
+  function linkKey(a){try{var p=new URL(a.href,location.href).pathname.replace(/^\/w\/(legacy|[a-f0-9]{64})/,'')||'/';return keyOf(p);}catch(e){return keyOf(a.getAttribute('href')||'/');}}
+  function setActive(key){links.forEach(function(a){var on=linkKey(a)===key;a.classList.toggle('active',on);if(on)a.setAttribute('aria-current','page');else a.removeAttribute('aria-current');});}
   function embedCss(key){return ''}
   function inject(doc,key){
     try{
@@ -69,7 +70,7 @@ iframe#frame.loaded{opacity:1}
     if(push){try{history.replaceState(null,'','#'+path);}catch(e){location.hash=path;}}
   }
   links.forEach(function(a){
-    a.addEventListener('click',function(e){e.preventDefault();load(a.getAttribute('href'),true);});
+    a.addEventListener('click',function(e){e.preventDefault();load(linkKey(a),true);});
   });
   var sendLink=document.querySelector('.side-nav a, .shell-bottom a.shell-send');
   document.querySelectorAll('.shell-bottom a.shell-send').forEach(function(a){
