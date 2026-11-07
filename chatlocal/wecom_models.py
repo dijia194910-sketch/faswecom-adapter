@@ -54,7 +54,7 @@ class ModelCatalog:
         for entry in data['models']:
             try:available=bool(self.key(data,entry.get('credential_id',entry['provider'])));error=''
             except ValueError as exc:available=False;error=str(exc)
-            rows.append(dict(entry,has_api_key=available,configured=available,key_error=error))
+            rows.append(dict(entry,enabled=entry.get('enabled',True),has_api_key=available,configured=available,key_error=error))
         return dict(active=data['active'],models=rows,managed=self.path.exists())
 
     @staticmethod
@@ -62,7 +62,7 @@ class ModelCatalog:
         if not isinstance(models,list) or not 1<=len(models)<=30:raise ValueError('模型目录范围为1–30项')
         ids=set();validated=[]
         for entry in models:
-            if not isinstance(entry,dict) or set(entry)-{'id','name','model','provider','api_base','max_tokens','max_input_tokens','temperature','timeout','max_retries','supports_thinking','supports_vision','credential_id'}:
+            if not isinstance(entry,dict) or set(entry)-{'id','name','model','provider','api_base','max_tokens','max_input_tokens','temperature','timeout','max_retries','supports_thinking','supports_vision','credential_id','enabled'}:
                 raise ValueError('模型字段无效')
             entry=dict(entry)
             for field in ('id','name','model','provider','api_base'):
@@ -78,6 +78,7 @@ class ModelCatalog:
             if 'temperature' in entry and (type(entry['temperature']) not in (int,float) or not 0<=entry['temperature']<=2):raise ValueError('温度范围无效')
             for field in ('supports_thinking','supports_vision'):
                 if field in entry and type(entry[field]) is not bool:raise ValueError('模型能力字段必须为布尔值')
+            if 'enabled' in entry and type(entry['enabled']) is not bool:raise ValueError('模型启用状态无效')
             ids.add(entry['id']);validated.append(entry)
         return validated
 
@@ -99,7 +100,26 @@ class ModelCatalog:
         with self.lock:
             data=self.read()
             if model_id not in {m['id'] for m in data['models']}:raise ValueError('模型不存在')
+            for entry in data['models']:
+                if entry['id']==model_id:entry['enabled']=True
             data['active']=model_id;self.write(data)
+        return self.public()
+
+    def set_enabled(self,model_id,enabled):
+        if type(enabled) is not bool:raise ValueError('启用状态无效')
+        with self.lock:
+            data=self.read()
+            entry=next((m for m in data['models'] if m['id']==model_id),None)
+            if entry is None:raise ValueError('模型不存在')
+            remaining=[m for m in data['models'] if m['id']!=model_id]
+            if not enabled and not any(m.get('enabled',True) for m in remaining):
+                raise ValueError('至少需要保留一个启用的模型')
+            entry['enabled']=enabled
+            if not enabled and data.get('active')==model_id:
+                data['active']=next((m['id'] for m in remaining if m.get('enabled',True)),None)
+            elif enabled and not data.get('active'):
+                data['active']=model_id
+            self.write(data)
         return self.public()
 
     def save_model(self, body):

@@ -80,6 +80,28 @@ class Console:
             backend=cfg.get('backend'), targets=[dict(id=k, **v) for k,v in cfg['targets'].items()],
             active_job=next((j['id'] for j in self.jobs.values() if j['state']=='running'), None))
 
+    def model_balance(self, model_id):
+        catalog=self.models.public()
+        entry=next((m for m in catalog['models'] if m['id']==model_id),None)
+        if entry is None:raise ValueError('模型不存在')
+        if not entry.get('has_api_key'):
+            return dict(supported=False,reason='尚未配置 API Key')
+        if entry.get('provider')!='deepseek':
+            return dict(supported=False,reason='该接口类型不提供余额查询')
+        data=self.models.read()
+        key=self.models.key(data,entry.get('credential_id') or entry['provider'])
+        import httpx
+        try:
+            with httpx.Client(timeout=8,trust_env=False) as client:
+                response=client.get(entry['api_base'].rstrip('/')+'/user/balance',headers={'Authorization':'Bearer '+key})
+                response.raise_for_status()
+                payload=response.json()
+        except (httpx.HTTPError,ValueError):
+            raise ValueError('余额查询失败，请检查网络或 API 地址') from None
+        infos=payload.get('balance_infos') or []
+        info=next((x for x in infos if x.get('currency')=='CNY'),infos[0] if infos else {})
+        return dict(supported=True,available=payload.get('is_available'),currency=info.get('currency',''),total=info.get('total_balance'),granted=info.get('granted_balance'),topped_up=info.get('topped_up_balance'))
+
     def plan(self, body):
         question = body.get('question', '')
         ids = body.get('conversations', [])
@@ -303,6 +325,16 @@ def install_console_routes(app, store, local, *, root=ROOT, runner=None, adapter
     def save_model(request:Request,body:dict):
         local(request,True)
         return guarded(console.models.save_model,body)
+
+    @app.post('/api/wecom/console/models/{model_id}/enabled')
+    def model_enabled(request:Request,model_id:str,body:dict):
+        local(request,True)
+        if set(body)!={'enabled'}:raise HTTPException(400,'启用状态参数无效')
+        return guarded(console.models.set_enabled,model_id,body['enabled'])
+
+    @app.get('/api/wecom/console/models/{model_id}/balance')
+    def model_balance(request:Request,model_id:str):
+        local(request);return guarded(console.model_balance,model_id)
 
     @app.post('/api/wecom/console/models/{model_id}/delete')
     def delete_model(request:Request,model_id:str,body:dict):

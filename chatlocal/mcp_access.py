@@ -141,7 +141,7 @@ class MCPAccess:
         start, end = date_bound(dates['start']), date_bound(dates['end'], True)
         if start is not None and end is not None and start >= end:
             raise ValueError('开始日期不能晚于截止日期。')
-        scope = dict(platforms=sorted(set(platforms)), conversations=selections, **dates,
+        scope = dict(platforms=sorted(set(platforms)), conversations=selections, all_conversations=bool(body.get('all_conversations')), **dates,
                      **{k: body.get(k, False) for k in ('media', 'prepare', 'voice', 'onebot', 'send', 'manage', 'chat', *CHAT_MEDIA_FLAGS)})
         if scope['send'] and not any(p in platforms for p in ('qq','wecom')):
             raise ValueError('直接发送需要选择 QQ 或企业微信平台。')

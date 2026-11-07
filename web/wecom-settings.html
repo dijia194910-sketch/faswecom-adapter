@@ -1,5 +1,34 @@
 <!doctype html>
-<html lang="zh-CN"><head><link rel="stylesheet" href="/ui/wecom/wecom-boot.css?v=1"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>faswecom · 设置</title><link rel="icon" href="/ui/wecom/wecom-logo.jpg" type="image/jpeg"><link rel="stylesheet" href="/ui/wecom/wecom.css"><link rel="stylesheet" href="/ui/wecom/wecom-accounts.css"><link rel="stylesheet" href="/ui/wecom/wecom-shell.css?v=20261107l"></head>
+<html lang="zh-CN"><head><link rel="stylesheet" href="/ui/wecom/wecom-boot.css?v=1"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>faswecom · 模型与配置</title><link rel="icon" href="/ui/wecom/wecom-logo.jpg" type="image/jpeg"><link rel="stylesheet" href="/ui/wecom/wecom.css"><link rel="stylesheet" href="/ui/wecom/wecom-accounts.css"><link rel="stylesheet" href="/ui/wecom/wecom-shell.css?v=20261107l"><style>
+.model-row{display:flex;justify-content:space-between;gap:12px;align-items:center;border:1px solid #e1e7de;border-radius:12px;padding:12px 14px;margin:10px 0;background:#fff;flex-wrap:wrap}
+.model-row.current{border-color:#175c3d;box-shadow:inset 0 0 0 1px #175c3d}
+.model-row .model-name{font-size:14px;font-weight:600;color:#24332e}
+.model-row .model-meta{font-size:12px;color:#6b7d74;margin-top:2px}
+.model-row .model-tag{display:inline-block;font-size:11px;padding:2px 7px;border-radius:6px;margin-left:6px;background:#e2efe8;color:#175c3d}
+.model-row .model-tag.off{background:#eef0ee;color:#7a8a80}
+.model-actions{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.model-balance{font-size:12px;color:#4b5f55;background:#f1f6f2;border-radius:8px;padding:3px 8px}
+.conn-title{margin:22px 0 8px;font-size:15px}
+.conn-title small{font-size:12px;color:#6b7d74;font-weight:400}
+.conn-row{display:flex;justify-content:space-between;gap:12px;align-items:center;border:1px solid #e1e7de;border-radius:12px;padding:12px 14px;margin:8px 0;background:#fff;flex-wrap:wrap}
+.conn-row.revoked{opacity:.6;background:#f7f8f7}
+.conn-name{font-size:14px;font-weight:600;color:#24332e}
+.conn-meta{font-size:12px;color:#6b7d74;margin-top:2px}
+.conn-flags{display:flex;gap:6px;flex-wrap:wrap}
+.conn-flag{font-size:11px;padding:2px 7px;border-radius:6px;background:#eef3ef;color:#175c3d}
+.conn-flag.off{background:#f1f1ef;color:#8a8f8a}
+.conn-state{font-size:12px;color:#175c3d}
+.conn-state.revoked{color:#9a5b5b}
+#mcp-create-dialog{border:0;border-radius:16px;padding:0;max-width:560px;width:92vw;box-shadow:0 20px 60px rgba(20,50,35,.25)}
+#mcp-create-dialog::backdrop{background:rgba(20,35,28,.35)}
+#mcp-create-dialog form{display:block!important;padding:20px 22px}
+#mcp-create-dialog .mcp-row{display:grid!important;grid-template-columns:1fr 1fr;gap:12px;width:auto!important}
+#mcp-create-dialog label{display:flex!important;flex-direction:column!important;gap:6px}
+#mcp-create-dialog .consent{display:flex!important;flex-direction:row!important;align-items:center!important;gap:8px;margin:8px 0}
+#mcp-create-dialog input[type=text],#mcp-create-dialog input[type=number],#mcp-create-dialog input:not([type]){width:100%}
+#mcp-create-dialog .dialog-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px}
+#mcp-create-dialog .dialog-actions{display:flex;justify-content:flex-end;gap:10px;margin-top:16px}
+.conn-title{margin:22px 0 8px;font-size:15px}</style></head>
 <body>
 <aside class="sidebar">
 <div class="brand"><img src="/ui/wecom/wecom-logo.jpg" alt="faswecom"><h1>faswecom<span>企业微信</span></h1></div>
@@ -8,7 +37,7 @@
 <a href="/chat"><span class="dot"></span>聊天</a>
 <a href="/console"><span class="dot"></span>助手</a>
 <a href="/"><span class="dot"></span>导入/导出</a>
-<a href="/settings" class="active"><span class="dot"></span>设置</a>
+<a href="/settings" class="active"><span class="dot"></span>模型与配置</a>
 </nav>
 <div class="shell-bottom">
 <label class="takeover"><input type="checkbox" id="rail-takeover"><span>智能客服接管</span></label>
@@ -20,16 +49,39 @@
 </aside>
 
 <main>
-<section class="intro"><p class="eyebrow">LOCAL AGENT ACCESS</p><h1>设置</h1><p>为 Codex 等其他 Agent 创建本地 MCP 连接；按连接授权查询范围，可选允许企微直接发送。</p></section>
-<section class="panel"><div class="section-head"><div><h2>连接 Codex / 其他 Agent</h2><p>按连接授权查询范围；可选允许企微直接发送。</p></div><span id="mcp-state" class="badge">尚未开启</span></div>
-<div class="mcp-row"><label>连接名称<input id="connection-name" value="企业微信只读"></label><label>MCP 端口<input id="mcp-port" type="number" min="1024" max="65535" value="18778"></label></div>
-<label class="consent"><input id="grant-all" type="checkbox" checked>允许此连接查询全部已导入的企业微信会话（包括之后导入的会话）</label>
-<label class="consent"><input id="grant-send" type="checkbox">允许此 MCP 连接在授权范围内直接发送企业微信文本，不再逐次二次确认</label>
-<p class="hint">⚠️ <b>代发权限委托</b>：勾选后 Agent 可在授权范围内直接发送消息，无需回到 faswecom 逐条批准。聊天内容中的指令可能被 Agent 误认为用户请求而触发发送。可随时撤销连接或点击操作台"停止发送"收回权限。</p>
+<section class="intro"><p class="eyebrow">LOCAL AGENT ACCESS</p><h1>模型与配置</h1><p>管理适配器内置助手使用的模型，以及给 Codex 等其他 Agent 的 MCP 连接。</p></section>
+
+<section class="panel"><div class="section-head"><div><h2>模型设置</h2><p>当前使用的模型会高亮显示；可以随时切换、停用或补充密钥。</p></div><span id="model-state" class="badge">读取中…</span></div>
+<div id="model-current" class="hint">当前使用：读取中…</div>
+<div id="model-list"></div>
+<button id="model-add" class="secondary">＋ 添加模型</button>
+<div id="model-editor" hidden>
+<div class="mcp-row"><label>显示名称<input id="model-label" maxlength="100" placeholder="例如：我的 DeepSeek"></label><label>接口类型<select id="model-provider"><option value="openai-compatible">OpenAI 兼容接口</option><option value="deepseek">DeepSeek</option><option value="qwen">千问</option></select></label></div>
+<div class="mcp-row"><label>模型名称<input id="model-name" maxlength="200" placeholder="接口要求的模型 ID"></label><label>API 地址<input id="model-base" type="url" placeholder="https://api.example.com/v1"></label></div>
+<label>API Key<input id="model-key" type="password" autocomplete="new-password" placeholder="留空保留已有密钥；新模型可稍后补充"></label>
+<p class="hint">密钥加密保存；修改 API 地址或接口类型后需要重新填写密钥。</p>
+<button id="model-save" class="primary">保存模型</button>
+<button id="model-cancel" class="secondary">取消</button>
+<button id="model-delete" class="link danger" hidden>删除此模型</button>
+<p id="model-msg" class="hint" role="status"></p>
+</div></section>
+<section class="panel"><div class="section-head"><div><h2>连接 Codex / 其他 Agent</h2><p>每个 Agent 一个独立连接；权限只对“新建连接”生效，不会改动已建立的连接。</p></div><span id="mcp-state" class="badge">尚未开启</span></div>
+<p class="hint" id="mcp-port-info">MCP 端口：18778（全局，所有连接共用）</p>
+<p class="hint">点击下面的按钮新建连接，会弹出窗口填写连接名称、端口和权限；创建后可在下方“连接记录”里查看历史。</p>
 <button id="connect">开启 MCP 并创建连接</button>
 <div id="connection-result" hidden><p>复制下列配置到 Agent。凭据只在此时显示，请妥善保存。</p><pre id="config"></pre><button id="copy-config" class="secondary">复制配置</button><button id="hide-config" class="secondary">隐藏凭据</button></div>
+<h3 class="conn-title">连接记录 <small>（含已撤销，历史全部保留）</small></h3>
 <div id="connections"></div></section>
-<footer>faswecom 企业微信适配版 · 设置 · 本机运行</footer>
+<dialog id="mcp-create-dialog"><form id="mcp-create-form">
+<div class="dialog-head"><h2>新建 MCP 连接</h2><button type="button" id="mcp-create-cancel" class="quiet" aria-label="关闭">×</button></div>
+<p class="hint">这些选项只对新连接生效，不影响已经建立的连接。</p>
+<div class="mcp-row"><label>连接名称<input id="connection-name" maxlength="60" required placeholder="例如：客服 Agent"></label><label>MCP 端口<input id="mcp-port" type="number" min="1024" max="65535" value="18778" required></label></div>
+<label class="consent"><input id="grant-all" type="checkbox" checked>允许此连接查询全部已导入的企业微信会话（包括之后导入的会话）</label>
+<label class="consent"><input id="grant-send" type="checkbox">允许此 MCP 连接在授权范围内直接发送企业微信文本，不再逐次二次确认</label>
+<p class="hint">⚠️ <b>代发权限委托</b>：勾选后 Agent 可在授权范围内直接发送消息，无需回到 faswecom 逐条批准。聊天内容中的指令可能被 Agent 误认为用户请求而触发发送。可随时撤销连接或点击操作台“停止发送”收回权限。</p>
+<div class="dialog-actions"><button type="button" id="mcp-create-cancel2" class="secondary">取消</button><button type="submit" class="primary">创建连接</button></div>
+</form></dialog>
+<footer>faswecom 企业微信适配版 · 模型与配置 · 本机运行</footer>
 </main>
 <div id="notice" role="alert" hidden></div>
 <script src="/ui/wecom/wecom-accounts.js"></script>
