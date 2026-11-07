@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 """导出企微联系人（id+名字）为 CSV，供绑定核对。"""
-import csv, json, re, sys
+import csv, json, os, re, sys
 from pathlib import Path
 
 ADAPTER = Path(r"G:\适配器")
@@ -12,7 +12,7 @@ from chatlocal import wecom_windows as w
 from chatlocal.wecom_reader import Reader
 from chatlocal.wecom_quickdb import read as qread
 
-ACCOUNT = "1688855540964207"
+ACCOUNT = os.environ.get("WECOM_ACCOUNT", "")  # 企微账号 ID：运行前用环境变量 WECOM_ACCOUNT 指定
 
 
 def history_names():

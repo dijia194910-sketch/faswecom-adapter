@@ -10,12 +10,12 @@
   python bind_apply.py 我的绑定表.csv        # 用两列简表
   python bind_apply.py --dry-run             # 只校验不写库
 """
-import csv, json, re, sys
+import csv, json, os, re, sys
 from pathlib import Path
 
 WS = Path(__file__).resolve().parent
 OUT = WS / "bindings-data" / "review"
-ACCOUNT = "1688855540964207"
+ACCOUNT = os.environ.get("WECOM_ACCOUNT", "")  # 企微账号 ID：运行前用环境变量 WECOM_ACCOUNT 指定
 sys.path.insert(0, str(WS))
 import bindings
 
