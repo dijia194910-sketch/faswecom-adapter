@@ -447,16 +447,7 @@ def adapter_llm() -> dict[str, Any] | None:
 class Brain:
     def __init__(self, config: dict[str, Any]):
         llm = config.get("llm") or {}
-        source = str(llm.get("source") or "adapter").lower()
-        adapter = adapter_llm() if source != "workbuddy" else None
-        if adapter:
-            self.url = adapter["url"]
-            self.model = adapter["model"]
-            self.key = adapter["key"]
-        else:
-            self.url = str(llm.get("url", "https://api.deepseek.com/chat/completions"))
-            self.model = str(llm.get("model", "deepseek-v4-flash"))
-            self.key = read_llm_key(llm)
+        self.url, self.model, self.key = llm_target(config)
         if not self.key:
             raise McpError("未读取到大模型 API Key")
         self.max_tokens = int(llm.get("max_tokens", 1200))
@@ -516,6 +507,21 @@ def read_llm_key(llm: dict[str, Any]) -> str:
     return ""
 
 
+def llm_target(config: dict[str, Any]) -> tuple[str, str, str]:
+    """解析自动回复用的大模型：默认跟随适配器当前模型，失败回退 WorkBuddy 配置。"""
+    llm = config.get("llm") or {}
+    source = str(llm.get("source") or "adapter").lower()
+    if source != "workbuddy":
+        adapter = adapter_llm()
+        if adapter:
+            return adapter["url"], adapter["model"], adapter["key"]
+    return (
+        str(llm.get("url", "https://api.deepseek.com/chat/completions")),
+        str(llm.get("model", "deepseek-v4-flash")),
+        read_llm_key(llm),
+    )
+
+
 def parse_json(text: str) -> dict[str, Any]:
     text = text.strip()
     if not text:
@@ -546,12 +552,12 @@ def summarize_conversation(config: dict[str, Any], lines: list[str], question: s
     if not lines and not question:
         return ""
     llm = config.get("llm") or {}
-    key = read_llm_key(llm)
+    url, model, key = llm_target(config)
     if not key:
         return ""
     body_text = chr(10).join(lines[-20:]) or question
     payload = {
-        "model": str(llm.get("model", "deepseek-v4-flash")),
+        "model": model,
         "messages": [
             {"role": "system", "content": SUMMARY_SYSTEM},
             {"role": "user", "content": f"【最近对话】\n{body_text[:4000]}\n\n请输出摘要。"},
@@ -560,7 +566,7 @@ def summarize_conversation(config: dict[str, Any], lines: list[str], question: s
         "temperature": 0.2,
     }
     request = urllib.request.Request(
-        str(llm.get("url", "https://api.deepseek.com/chat/completions")),
+        url,
         data=json.dumps(payload).encode("utf-8"),
         headers={"Content-Type": "application/json", "Authorization": f"Bearer {key}"},
     )
@@ -581,11 +587,11 @@ GENTLE_SYSTEM = """你是广州爱美熊的客服助手。客户刚说了结束�
 def gentle_reply(config: dict[str, Any], text: str) -> str:
     """结束语用模型生成一句温柔回应，失败返回空串。"""
     llm = config.get("llm") or {}
-    key = read_llm_key(llm)
+    url, model, key = llm_target(config)
     if not key:
         return ""
     payload = {
-        "model": str(llm.get("model", "deepseek-v4-flash")),
+        "model": model,
         "messages": [
             {"role": "system", "content": GENTLE_SYSTEM},
             {"role": "user", "content": f"客户说：{str(text)[:200]}"},
@@ -594,7 +600,7 @@ def gentle_reply(config: dict[str, Any], text: str) -> str:
         "temperature": 0.8,
     }
     request = urllib.request.Request(
-        str(llm.get("url", "https://api.deepseek.com/chat/completions")),
+        url,
         data=json.dumps(payload).encode("utf-8"),
         headers={"Content-Type": "application/json", "Authorization": f"Bearer {key}"},
     )

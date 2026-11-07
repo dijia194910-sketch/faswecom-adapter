@@ -121,9 +121,13 @@ def compose(
     if summary:
         head.append(f"客户问题：{summary}")
     elif lines:
-        head.append("客户问题：最近对话如下")
-        head.append("")
-        head.extend(lines)
+        # 摘要生成失败时只带最近 1~2 条客户消息，绝不整段转发聊天记录
+        recent = [line for line in lines if "客户：" in line][-2:]
+        brief = "；".join(
+            line.split("客户：", 1)[-1].strip().rstrip("…")[:40] for line in recent
+        ) if recent else ""
+        head.append(f"客户问题：{brief or '见该客户最近会话'}")
+        head.append("（摘要生成失败，请在企业微信中查看完整会话）")
     else:
         head.append("客户问题：读取失败，请在企业微信中直接查看该客户会话")
 
