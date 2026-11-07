@@ -1,0 +1,7 @@
+-r requirements-wecom.txt
+rapidocr==3.9.2
+onnxruntime==1.30.0
+pywin32>=306; sys_platform == 'win32'
+
+# Version-pinned native text sender (does not use window input).
+frida==17.23.1

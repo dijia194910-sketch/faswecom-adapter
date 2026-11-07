@@ -1,0 +1,21 @@
+<!doctype html>
+<html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>faswecom · 聊天</title><link rel="icon" href="/ui/wecom/wecom-logo.jpg"><link rel="stylesheet" href="/ui/wecom/wecom-accounts.css"><link rel="stylesheet" href="/ui/wecom/wecom-chat.css"><link rel="stylesheet" href="/ui/wecom/wecom-shell.css?v=20261107h"></head>
+<body>
+<aside class="sidebar">
+  <div class="brand"><img src="/ui/wecom/wecom-logo.jpg" alt="faswecom"><h1>faswecom<span>企业微信</span></h1></div>
+</aside>
+<aside class="list-panel">
+  <div class="list-head"><h1>聊天</h1><button id="refresh-chats" class="icon" aria-label="刷新会话">↻</button></div>
+  <div class="list-search"><input id="chat-query" placeholder="搜索联系人或群聊" aria-label="搜索联系人或群聊"></div>
+  <p class="list-caption">最近会话 <span id="chat-count"></span></p>
+  <div id="chat-list" class="chat-list" aria-label="会话列表"><p class="empty">正在加载会话…</p></div>
+  <button id="more-chats" class="quiet" hidden>更多会话</button>
+  <div class="sync-footer"><p id="sync-state" role="status">正在连接同步服务…</p><button id="sync-toggle" class="quiet">暂停自动同步</button></div>
+  <div id="chat-splitter" class="splitter" role="separator" aria-orientation="vertical" tabindex="0" title="拖动调整宽度"></div>
+</aside>
+<main class="chat-main"><header class="chat-header"><div><h2 id="chat-title">选择一个聊天</h2><p id="chat-subtitle">从左侧会话开始</p></div><button id="toggle-history" class="quiet" disabled>搜索聊天记录</button></header><form id="history-form" class="history-search" hidden><input id="history-query" placeholder="搜索当前聊天的消息内容" aria-label="搜索当前聊天的消息内容"><button>搜索</button><button id="clear-history" class="quiet" type="button">返回聊天</button></form>
+<section id="reply-suggestion" class="reply-suggestion" hidden><strong>回复草稿</strong><p id="reply-suggestion-text"></p><button id="use-suggestion" type="button">填入输入框</button><button id="close-suggestion" type="button" class="quiet">关闭</button></section>
+<div id="message-scroll" class="message-scroll"><button id="older-messages" class="quiet older" hidden>加载更早消息</button><div id="chat-messages"><div class="welcome"><div class="welcome-icon">聊</div><h2>工作对话，在这里继续。</h2><p>选择联系人或群聊，查看记录并直接发送消息。</p><a href="/">还没有会话？前往数据与同步</a></div></div><div id="outbox"></div></div><button id="new-messages" class="new-messages" hidden>有新消息 · 点击查看</button>
+<form id="chat-composer" class="chat-composer"><div class="composer-tools"><button id="choose-file" type="button" class="quiet" disabled>＋ 文件</button><input id="file-input" type="file" hidden><span id="send-mode-note">文字默认通过原生接口发送</span><select id="chat-backend" aria-label="文字发送方式"><option value="native">原生文字</option><option value="desktop_ocr">前台桌面</option><option value="background_window">后台窗口</option></select></div><div id="file-chip" class="file-chip" hidden><span id="file-label"></span><button type="button" id="remove-file" class="quiet" aria-label="移除附件">×</button></div><label for="chat-text" class="sr-only">消息正文</label><textarea id="chat-text" rows="3" maxlength="2000" placeholder="输入消息…" disabled></textarea><div class="composer-bottom"><span id="composer-hint">Enter 发送 · Shift+Enter 换行</span><button id="chat-send" type="submit" disabled>发送</button></div><p id="chat-send-status" role="status" aria-live="polite"></p></form></main>
+<dialog id="image-viewer"><button id="close-image" type="button" aria-label="关闭大图">×</button><img id="full-image" alt="聊天图片"></dialog>
+<div id="chat-toast" role="alert" hidden></div><script src="/ui/wecom/wecom-accounts.js"></script><script src="/ui/wecom/wecom-chat-avatars.js"></script><script src="/ui/wecom/wecom-chat.js"></script><script src="/ui/wecom/wecom-keys.js"></script><script src="/ui/wecom/wecom-sync.js"></script><script src="/ui/wecom/wecom-shell.js?v=20261107h"></script></body></html>

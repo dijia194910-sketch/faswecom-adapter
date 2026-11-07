@@ -1,0 +1,20 @@
+<!doctype html>
+<html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>faswecom · 设置</title><link rel="icon" href="/ui/wecom/wecom-logo.jpg" type="image/jpeg"><link rel="stylesheet" href="/ui/wecom/wecom.css"><link rel="stylesheet" href="/ui/wecom/wecom-accounts.css"><link rel="stylesheet" href="/ui/wecom/wecom-shell.css?v=20261107h"></head>
+<body>
+<main>
+<section class="intro"><p class="eyebrow">LOCAL AGENT ACCESS</p><h1>设置</h1><p>为 Codex 等其他 Agent 创建本地 MCP 连接；按连接授权查询范围，可选允许企微直接发送。</p></section>
+<section class="panel"><div class="section-head"><div><h2>连接 Codex / 其他 Agent</h2><p>按连接授权查询范围；可选允许企微直接发送。</p></div><span id="mcp-state" class="badge">尚未开启</span></div>
+<div class="mcp-row"><label>连接名称<input id="connection-name" value="企业微信只读"></label><label>MCP 端口<input id="mcp-port" type="number" min="1024" max="65535" value="18778"></label></div>
+<label class="consent"><input id="grant-all" type="checkbox" checked>允许此连接查询全部已导入的企业微信会话（包括之后导入的会话）</label>
+<label class="consent"><input id="grant-send" type="checkbox">允许此 MCP 连接在授权范围内直接发送企业微信文本，不再逐次二次确认</label>
+<p class="hint">⚠️ <b>代发权限委托</b>：勾选后 Agent 可在授权范围内直接发送消息，无需回到 faswecom 逐条批准。聊天内容中的指令可能被 Agent 误认为用户请求而触发发送。可随时撤销连接或点击操作台"停止发送"收回权限。</p>
+<button id="connect">开启 MCP 并创建连接</button>
+<div id="connection-result" hidden><p>复制下列配置到 Agent。凭据只在此时显示，请妥善保存。</p><pre id="config"></pre><button id="copy-config" class="secondary">复制配置</button><button id="hide-config" class="secondary">隐藏凭据</button></div>
+<div id="connections"></div></section>
+<footer>faswecom 企业微信适配版 · 设置 · 本机运行</footer>
+</main>
+<div id="notice" role="alert" hidden></div>
+<script src="/ui/wecom/wecom-accounts.js"></script>
+<script src="/ui/wecom/wecom-settings.js"></script>
+<script src="/ui/wecom/wecom-shell.js?v=20261107h"></script>
+</body></html>

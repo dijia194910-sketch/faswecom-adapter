@@ -1,0 +1,16 @@
+# Independent WeCom edition; scoped Tulpa Agent and optional model calls.
+fastapi==0.141.1
+uvicorn>=0.31.1,<1
+mcp==1.26.0
+httpx==0.28.1
+jieba==0.42.1
+python-dotenv==1.2.3
+apsw>=3.45,<4
+jsonschema>=4.0,<5
+pycryptodome==3.23.0
+pefile==2024.8.26
+psutil==5.9.6
+Pillow>=10,<13
+zstandard>=0.23,<1
+websockets>=15,<16
+deepseek-harness-sdk==0.1.5rc1

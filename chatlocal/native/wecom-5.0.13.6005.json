@@ -1,0 +1,50 @@
+{
+  "version": "5.0.13.6005",
+  "arch": "ia32",
+  "sha256": "9f7dcb2a085c9a379adbc9a3375d6d314f6cf101f2517b211f1902a261c9f242",
+  "functions": {
+    "conversation_send": {
+      "rva": 42957344,
+      "prefix": "6690558bec"
+    },
+    "create_text": {
+      "rva": 140520064,
+      "prefix": "6690558bec"
+    },
+    "dispatch_send": {
+      "rva": 56538928,
+      "prefix": "6690558bec"
+    },
+    "create_pending": {
+      "rva": 76133264,
+      "prefix": "6690558bec"
+    },
+    "release_shared": {
+      "rva": 23318672,
+      "prefix": "6690578b79"
+    },
+    "parse_body": {
+      "rva": 23338752,
+      "prefix": "6690558bec"
+    },
+    "assign_string": {
+      "rva": 2097450,
+      "prefix": "558bec5156"
+    },
+    "get_login_vid": {
+      "rva": 161515792,
+      "prefix": "6690558bec"
+    },
+    "message_service_send": {
+      "rva": 162875888,
+      "prefix": "6690558bec"
+    }
+  },
+  "layout": {
+    "conversation_vtable": 191011256,
+    "manager_vtable": 201454928,
+    "login_vtable": 201336996,
+    "message_vtable": 201383684,
+    "manager_global": 270696404
+  }
+}
