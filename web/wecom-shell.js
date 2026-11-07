@@ -318,6 +318,7 @@
     setupChatSplitter();
     setupConsoleSplitter();
     setupScope();
+    document.documentElement.classList.remove('shell-boot');
     if (active === 'console' && new URLSearchParams(location.search).has('send')) {
       setTimeout(() => { const button = document.getElementById('open-send'); if (button) button.click(); }, 700);
     }

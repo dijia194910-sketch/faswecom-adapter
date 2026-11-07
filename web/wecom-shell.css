@@ -1,3 +1,5 @@
+html{background:#f4f6f5}
+.shell-boot body{visibility:hidden}
 :root{--rail-w:180px;--list-w:300px;--shell-bg:#f4f6f5;--shell-panel:#f7faf8;--shell-line:#e0e7e2;--shell-text:#24332e;--shell-muted:#6b7d74;--shell-accent:#175c3d;--shell-active:#e2efe8}
 body.shell-chat{display:grid;grid-template-columns:var(--rail-w) var(--chat-list-w,var(--list-w)) minmax(0,1fr);margin:0;height:100vh;overflow:hidden;background:var(--shell-bg);color:var(--shell-text);font-family:"Microsoft YaHei UI","Segoe UI",sans-serif}
 body.shell-console{display:grid;grid-template-columns:var(--rail-w) var(--console-list-w,var(--list-w)) minmax(0,1fr);margin:0;height:100vh;overflow:hidden;background:var(--shell-bg);color:var(--shell-text);font-family:"Microsoft YaHei UI","Segoe UI",sans-serif}
