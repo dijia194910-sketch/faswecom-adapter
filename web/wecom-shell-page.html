@@ -1,0 +1,87 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>faswecom · 企业微信</title>
+<link rel="icon" href="/ui/wecom/wecom-logo.jpg" type="image/jpeg">
+<link rel="stylesheet" href="/ui/wecom/wecom.css">
+<link rel="stylesheet" href="/ui/wecom/wecom-accounts.css">
+<link rel="stylesheet" href="/ui/wecom/wecom-shell.css?v=20261107m">
+<style>
+html,body{height:100%;margin:0}
+body{overflow:hidden}
+.frame-wrap{margin:0!important;padding:0!important;overflow:hidden;min-width:0}
+iframe#frame{width:100%;height:100%;border:0;display:block;background:#f4f6f5}
+</style>
+</head>
+<body>
+<aside class="sidebar">
+<div class="brand"><img src="/ui/wecom/wecom-logo.jpg" alt="faswecom"><h1>faswecom<span>企业微信</span></h1></div>
+<div class="rail-account"></div>
+<nav class="side-nav">
+<a href="/chat"><span class="dot"></span>聊天</a>
+<a href="/console"><span class="dot"></span>助手</a>
+<a href="/"><span class="dot"></span>导入/导出</a>
+<a href="/settings"><span class="dot"></span>设置</a>
+</nav>
+<div class="shell-bottom">
+<label class="takeover"><input type="checkbox" id="rail-takeover"><span>智能客服接管</span></label>
+<p class="takeover-state" id="rail-takeover-state">正在读取…</p>
+<a href="/console?send=1" class="shell-send">发送权限设置</a>
+<p class="meta">本地运行 · 仅本机访问</p>
+</div>
+<div class="rail-splitter" role="separator" aria-orientation="vertical" tabindex="0" title="拖动调整侧边栏宽度"></div>
+</aside>
+<main class="frame-wrap"><iframe id="frame"></iframe></main>
+<script src="/ui/wecom/wecom-accounts.js"></script>
+<script src="/ui/wecom/wecom-shell.js?v=20261107m"></script>
+<script>
+(function(){
+  var frame=document.getElementById('frame');
+  var links=[].slice.call(document.querySelectorAll('.side-nav a'));
+  function keyOf(path){
+    if(path.indexOf('/settings')===0)return '/settings';
+    if(path.indexOf('/console')===0)return '/console';
+    if(path.indexOf('/chat')===0)return '/chat';
+    return '/';
+  }
+  function setActive(key){links.forEach(function(a){var on=a.getAttribute('href')===key;a.classList.toggle('active',on);if(on)a.setAttribute('aria-current','page');else a.removeAttribute('aria-current');});}
+  function embedCss(key){return ''}
+  function inject(doc,key){
+    try{
+      if(!doc.getElementById('embed-css')){
+        var link=doc.createElement('link');link.id='embed-css';link.rel='stylesheet';
+        link.href='/ui/wecom/wecom-embed.css?v=1';
+        doc.head.appendChild(link);
+      }
+      var kind=key==='/chat'?'chat':key==='/console'?'console':'page';
+      doc.body.classList.add('embed','embed-'+kind);
+    }catch(e){}
+  }
+  function load(path,push){
+    var key=keyOf(path);
+    setActive(key);
+    if(frame.getAttribute('src')!==path)frame.src=path;
+    if(push){try{history.replaceState(null,'','#'+path);}catch(e){location.hash=path;}}
+  }
+  links.forEach(function(a){
+    a.addEventListener('click',function(e){e.preventDefault();load(a.getAttribute('href'),true);});
+  });
+  var sendLink=document.querySelector('.side-nav a, .shell-bottom a.shell-send');
+  document.querySelectorAll('.shell-bottom a.shell-send').forEach(function(a){
+    a.addEventListener('click',function(e){e.preventDefault();load('/console?send=1',false);});
+  });
+  frame.addEventListener('load',function(){
+    try{
+      var path=frame.contentWindow.location.pathname.replace(/^\/w\/(legacy|[a-f0-9]{64})/,'')||'/';
+      var key=keyOf(path);
+      setActive(key);
+      inject(frame.contentDocument,key);
+    }catch(e){}
+  });
+  load(location.hash.slice(1)||'/chat',false);
+})();
+</script>
+</body>
+</html>

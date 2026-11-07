@@ -49,7 +49,7 @@ def install_chat(app,store,local,sources=None):
     @app.get('/chat')
     def page(request:Request):
         local(request)
-        return FileResponse(ROOT/'web/wecom-chat.html',headers={'Cache-Control':'no-store','Referrer-Policy':'no-referrer','Content-Security-Policy':"default-src 'self'; script-src 'self'; style-src 'self'; connect-src 'self'; img-src 'self' blob:; media-src 'self'; frame-ancestors 'none'; base-uri 'none'"})
+        return FileResponse(ROOT/'web/wecom-chat.html',headers={'Cache-Control':'no-store','Referrer-Policy':'no-referrer','Content-Security-Policy':"default-src 'self'; script-src 'self'; style-src 'self'; connect-src 'self'; img-src 'self' blob:; media-src 'self'; frame-ancestors 'self'; base-uri 'none'"})
 
     @app.post('/api/wecom/chat/media')
     def attachments(request:Request,body:dict):

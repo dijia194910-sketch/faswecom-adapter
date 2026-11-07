@@ -285,7 +285,7 @@ class Workspaces:
         if scope['type']=='lifespan' or path.startswith('/api/desktop/') or re.fullmatch(r'/w/[^/]+/api/wecom/profiles(?:/switch)?',path):
             return await self.management(scope,receive,send)
         if not self.active:return await JSONResponse(dict(detail='账号服务尚未就绪'),status_code=503)(scope,receive,send)
-        if path in ('/','/console','/chat','/settings'):
+        if path in ('/','/console','/chat','/settings','/shell'):
             query=scope.get('query_string',b'').decode('ascii')
             response=RedirectResponse('/w/'+self.active.key+path+('?' + query if query else ''),status_code=307)
             return await response(scope,receive,send)

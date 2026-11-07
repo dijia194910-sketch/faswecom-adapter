@@ -262,7 +262,7 @@ def install_console_routes(app, store, local, *, root=ROOT, runner=None, adapter
     def page(request:Request):
         local(request)
         return FileResponse(ROOT/'web/wecom-console.html',headers={'Cache-Control':'no-store','Referrer-Policy':'no-referrer',
-            'Content-Security-Policy':"default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self'; connect-src 'self'; frame-ancestors 'none'; base-uri 'none'"})
+            'Content-Security-Policy':"default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self'; connect-src 'self'; frame-ancestors 'self'; base-uri 'none'"})
 
     @app.get('/api/wecom/console/status')
     def status(request:Request): local(request);return guarded(console.status)

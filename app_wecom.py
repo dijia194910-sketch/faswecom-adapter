@@ -94,7 +94,12 @@ def create_app(store=None, sources=None, *, console_options=None, first_run=Fals
         local(request)
         return FileResponse(ROOT / 'web/wecom.html', headers={
             'Cache-Control': 'no-store', 'Referrer-Policy': 'no-referrer',
-            'Content-Security-Policy': "default-src 'self'; script-src 'self'; style-src 'self'; connect-src 'self'; frame-ancestors 'none'; base-uri 'none'"})
+            'Content-Security-Policy': "default-src 'self'; script-src 'self'; style-src 'self'; connect-src 'self'; frame-ancestors 'self'; base-uri 'none'"})
+
+    @app.get('/shell')
+    def shell_page(request: Request):
+        local(request)
+        return FileResponse(ROOT / 'web/wecom-shell-page.html', headers={'Cache-Control': 'no-store'})
 
     @app.get('/settings')
     def settings_page(request: Request):
@@ -104,7 +109,7 @@ def create_app(store=None, sources=None, *, console_options=None, first_run=Fals
     @app.get('/ui/wecom/{name}')
     def asset(request: Request, name: str):
         local(request)
-        if name not in ('wecom.js', 'wecom.css', 'wecom-chat.js','wecom-chat-avatars.js','wecom-chat.css','wecom-export.js','wecom-export.css','wecom-keys.js','wecom-console.js', 'wecom-console.css', 'wecom-setup.js', 'wecom-dialogue.js', 'wecom-sync.js', 'wecom-navigation.js', 'wecom-accounts.js', 'wecom-accounts.css', 'wecom-logo.jpg', 'wecom-shell.css', 'wecom-shell.js', 'wecom-settings.js', 'wecom-boot.js'):
+        if name not in ('wecom.js', 'wecom.css', 'wecom-chat.js','wecom-chat-avatars.js','wecom-chat.css','wecom-export.js','wecom-export.css','wecom-keys.js','wecom-console.js', 'wecom-console.css', 'wecom-setup.js', 'wecom-dialogue.js', 'wecom-sync.js', 'wecom-navigation.js', 'wecom-accounts.js', 'wecom-accounts.css', 'wecom-logo.jpg', 'wecom-shell.css', 'wecom-shell.js', 'wecom-settings.js', 'wecom-boot.js', 'wecom-embed.css'):
             raise HTTPException(404)
         return FileResponse(ROOT / 'web' / name, headers={'Cache-Control': 'no-store'})
 

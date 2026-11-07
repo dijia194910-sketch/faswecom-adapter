@@ -90,7 +90,7 @@ sealed class DesktopWindow:Form {
             menu.Items.Add(startup);
         }
         menu.Items.Add("彻底退出",null,delegate{exitRequested=true;Close();});
-        tray.ContextMenuStrip=menu;tray.DoubleClick+=delegate{ShowWindow();};tray.MouseClick+=delegate(object sender,MouseEventArgs e){if(e.Button==MouseButtons.Left)ShowWindow();};tray.Visible=true;
+        tray.ContextMenuStrip=menu;tray.DoubleClick+=delegate{ShowWindow();};tray.MouseClick+=delegate(object sender,MouseEventArgs e){if(e.Button==MouseButtons.Left){if(Visible&&ShowInTaskbar)HideToTray();else ShowWindow();}};tray.Visible=true;
         using(var stream=typeof(DesktopWindow).Assembly.GetManifestResourceStream("faswecom.Logo.png"))
         using(var image=Image.FromStream(stream))logo.Image=new Bitmap(image);
         logo.Size=new Size(96,96);logo.SizeMode=PictureBoxSizeMode.Zoom;logo.BackColor=Color.Black;
@@ -237,7 +237,7 @@ sealed class DesktopWindow:Form {
 #endif
 #if WECOM
             Text="faswecom · 企业微信";
-            view.CoreWebView2.Navigate(service+"/chat?desktop=1");
+            view.CoreWebView2.Navigate(service+"/shell?desktop=1");
 #else
             view.CoreWebView2.Navigate(service+"/?desktop=1");
 #endif
