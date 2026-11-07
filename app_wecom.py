@@ -109,7 +109,7 @@ def create_app(store=None, sources=None, *, console_options=None, first_run=Fals
     @app.get('/ui/wecom/{name}')
     def asset(request: Request, name: str):
         local(request)
-        if name not in ('wecom.js', 'wecom.css', 'wecom-chat.js','wecom-chat-avatars.js','wecom-chat.css','wecom-export.js','wecom-export.css','wecom-keys.js','wecom-console.js', 'wecom-console.css', 'wecom-setup.js', 'wecom-dialogue.js', 'wecom-sync.js', 'wecom-navigation.js', 'wecom-accounts.js', 'wecom-accounts.css', 'wecom-logo.jpg', 'wecom-shell.css', 'wecom-shell.js', 'wecom-settings.js', 'wecom-boot.js', 'wecom-embed.css'):
+        if name not in ('wecom.js', 'wecom.css', 'wecom-chat.js','wecom-chat-avatars.js','wecom-chat.css','wecom-export.js','wecom-export.css','wecom-keys.js','wecom-console.js', 'wecom-console.css', 'wecom-setup.js', 'wecom-dialogue.js', 'wecom-sync.js', 'wecom-navigation.js', 'wecom-accounts.js', 'wecom-accounts.css', 'wecom-logo.jpg', 'wecom-shell.css', 'wecom-shell.js', 'wecom-settings.js', 'wecom-boot.js', 'wecom-embed.css', 'wecom-boot.css'):
             raise HTTPException(404)
         return FileResponse(ROOT / 'web' / name, headers={'Cache-Control': 'no-store'})
 

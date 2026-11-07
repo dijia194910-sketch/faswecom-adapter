@@ -12,7 +12,10 @@
 html,body{height:100%;margin:0}
 body{overflow:hidden}
 .frame-wrap{margin:0!important;padding:0!important;overflow:hidden;min-width:0}
-iframe#frame{width:100%;height:100%;border:0;display:block;background:#f4f6f5}
+iframe#frame{width:100%;height:100%;border:0;display:block;background:#f4f6f5;opacity:0;transition:opacity .18s ease}
+iframe#frame.loaded{opacity:1}
+.side-nav a.active{background:#d7e9df!important;color:#145c3a!important;font-weight:600!important;box-shadow:inset 3px 0 0 #145c3a}
+.side-nav a.active .dot{background:#145c3a!important}
 </style>
 </head>
 <body>
@@ -62,7 +65,7 @@ iframe#frame{width:100%;height:100%;border:0;display:block;background:#f4f6f5}
   function load(path,push){
     var key=keyOf(path);
     setActive(key);
-    if(frame.getAttribute('src')!==path)frame.src=path;
+    if(frame.getAttribute('src')!==path){frame.classList.remove('loaded');frame.src=path;}
     if(push){try{history.replaceState(null,'','#'+path);}catch(e){location.hash=path;}}
   }
   links.forEach(function(a){
@@ -78,6 +81,7 @@ iframe#frame{width:100%;height:100%;border:0;display:block;background:#f4f6f5}
       var key=keyOf(path);
       setActive(key);
       inject(frame.contentDocument,key);
+      frame.classList.add('loaded');
     }catch(e){}
   });
   load(location.hash.slice(1)||'/chat',false);
