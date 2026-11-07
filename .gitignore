@@ -3,8 +3,6 @@ data/
 .cache/
 runtime/
 _internal/
-harness/
-licenses/
 imports/
 backup-ui-*/
 __pycache__/

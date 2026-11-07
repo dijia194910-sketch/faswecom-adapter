@@ -80,6 +80,13 @@ python desktop\serve_wecom.py dev.ready
 - 助手页：搜索范围改为右侧抽屉（点外部/箭头收起）、最近对话可拖拽调宽
 - 修复若干界面细节，保留全部原有发送/读取业务逻辑
 
+## 界面架构（2026-11）
+
+- 外层 `/shell` 页面固定左侧菜单，右侧用 iframe 承载内容页；
+- 切换选项卡只替换右侧内容，左侧不刷新，当前项有高亮；
+- 启动器（`desktop/FasWeCom.cs`）直接打开 `/shell`，窗口居中、托盘单击可打开/收起；
+- 内容页支持被嵌入（`web/wecom-embed.css`），首帧背景统一（`web/wecom-boot.css`），避免切换白闪。
+
 ## 文档
 
 - 适配器接口：doc/WECOM_ADAPTER.md
