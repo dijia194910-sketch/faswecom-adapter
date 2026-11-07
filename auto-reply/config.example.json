@@ -1,0 +1,88 @@
+{
+  "version": 4,
+  "mode": "live",
+  "scope": "direct_all",
+  "db_path": "G:/适配器/data/chats.sqlite3",
+  "workspace": "<AUTO_REPLY_DIR>",
+  "poll_seconds": 1,
+  "debounce_seconds": 5,
+  "max_attempts": 2,
+  "retry_delay_seconds": 30,
+  "max_message_age_seconds": 1800,
+  "ai_suffix": "（AI回复）",
+  "min_confidence": 0.8,
+  "kb_cache_seconds": 900,
+  "knowledge_base": {
+    "name": "客服知识库",
+    "id": "<KB_ID>"
+  },
+  "ima": {
+    "url": "https://ima.qq.com/mcp",
+    "key": "ima-mcp",
+    "state_file": "<WORKBUDDY_CONNECTOR_STATE>"
+  },
+  "llm": {
+    "source": "adapter",
+    "url": "https://api.deepseek.com/chat/completions",
+    "model": "deepseek-chat",
+    "models_file": "<WORKBUDDY_MODELS_JSON>",
+    "max_tokens": 1200,
+    "timeout_seconds": 60
+  },
+  "faswecom": {},
+  "mcp_config": "<WORKBUDDY_MCP_CONFIG>",
+  "blocked_conversations": [
+    "<企业ID>:MAIL",
+    "<企业ID>:FILEASSIST"
+  ],
+  "blocked_names": [
+    "企业邮箱",
+    "文件传输助手",
+    "行业资讯",
+    "企业微信团队"
+  ],
+  "python_path": "G:/适配器/runtime/python.exe",
+  "single_instance_port": 45917,
+  "dispatcher": {
+    "agent_prompt_ref": "ai-service-dispatcher",
+    "gates": [
+      "G0_risk",
+      "G1_kb",
+      "G2_skill",
+      "G3_clarify",
+      "G4_human"
+    ]
+  },
+  "skills": {
+    "enabled": true,
+    "registry": "skills/registry.json",
+    "slot_state": "slot-state.json",
+    "slot_ttl_seconds": 3600,
+    "slot_retry_max": 2,
+    "cli_timeout_seconds": 150,
+    "max_turns": 14,
+    "node_path": "<NODE_EXE>",
+    "codebuddy_cli": "<WORKBUDDY_CLI>",
+    "workbuddy_config_dir": "<WORKBUDDY_CONFIG_DIR>",
+    "skill_dir": "<WORKBUDDY_SKILLS_DIR>",
+    "mcp_config": "<WORKBUDDY_MCP_CONFIG>",
+    "permission_mode": "bypassPermissions",
+    "executor": "builtin",
+    "queue_file": "skill-queue.jsonl",
+    "order_days": 90,
+    "notfound_max": 3,
+    "welcome_cooldown_seconds": 600
+  },
+  "draft_min_confidence": 0.6,
+  "handoff": {
+    "enabled": true,
+    "agent_name": "人工客服",
+    "agent_recipient_id": "<PERSON_ID>",
+    "history_limit": 20,
+    "retries": 0,
+    "wait_seconds": 6,
+    "reminder_interval_seconds": 600,
+    "max_reminders": 2,
+    "agent_conversation_id": "<CONVERSATION_ID>"
+  }
+}

@@ -1,0 +1,16 @@
+# 运行时数据（不随源码提交）
+__pycache__/
+*.pyc
+*.sqlite3
+*.jsonl
+*.log
+live-state.json
+slot-state.json
+welcome-state.json
+handoff-state.json
+handoff-tickets*.json
+bindings-data/
+kb-cache/
+logs/
+handoff-inbox/
+vendor/**/__pycache__/

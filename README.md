@@ -26,12 +26,35 @@
 ├─ chatlocal/                后端核心模块（读取、存储、发送、MCP、控制台…）
 ├─ scripts/                  辅助脚本（发送 worker 等）
 ├─ web/                      Web 操作台前端（HTML/CSS/JS + Logo）
+├─ auto-reply/               自动回复子项目（企微新消息监听 + 知识库 + 技能 + 转人工）
 ├─ doc/                      设计文档（适配器、聊天、控制台、导出、本地化、原生兼容）
 ├─ requirements-wecom.txt        基础依赖
 ├─ requirements-wecom-adapter.txt 发送相关依赖（OCR / Windows）
 ├─ LICENSE                   MIT
 └─ 开始使用.txt               安装包内的快速说明
 ~~~
+
+## 自动回复（auto-reply/）
+
+`auto-reply/` 是独立的自动回复子项目，依赖本适配器运行的本地库与发送通道：
+
+- `watcher.py`：秒级轮询本地库新消息（仅私聊），合并短时间连续消息；
+- `responder.py`：IMA 知识库检索 → 模型判 AUTO / DRAFT / ESCALATE → 经适配器发送；
+- `skill_router.py` + `skills/registry.json`：知识库未命中时按业务技能路由（如物流查询）；
+- `handoff.py`：转人工通知，推送客户信息与最近对话；
+- `km_order.py`：快马订单/物流技能实现。
+
+**模型跟随**：`config.json` 的 `llm.source = "adapter"` 时，自动回复每条消息都会读取本适配器
+`data/wecom-models.json` 里「当前使用」的模型（含密钥），因此在操作台「模型与配置」页切换模型后，
+下一条消息即生效，无需重启 watcher；读取失败时回退到 `llm` 里的 url/model/models_file 配置。
+
+使用方式：
+
+1. 复制 `config.example.json` 为 `config.json`，按本机路径/知识库/人工客服信息填写；
+2. 用 `install-startup-task.ps1` 注册开机启动（或手动运行 `start-watcher.ps1`）；
+3. 在操作台聊天页打开「智能客服接管」后，watcher 才会处理新消息。
+
+> 本目录只包含源码与示例配置；`config.json`、日志、`*.jsonl`、`*.sqlite3`、运行时状态文件均不提交。
 
 ## 环境要求
 
