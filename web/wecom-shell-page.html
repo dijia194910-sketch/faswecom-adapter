@@ -33,6 +33,7 @@ iframe#frame.loaded{opacity:1}
 <label class="takeover"><input type="checkbox" id="rail-takeover"><span>智能客服接管</span></label>
 <p class="takeover-state" id="rail-takeover-state">正在读取…</p>
 <a href="/console?send=1" class="shell-send">发送权限设置</a>
+<a href="/console?model=1" class="shell-model">模型设置</a>
 <p class="meta">本地运行 · 仅本机访问</p>
 </div>
 </aside>
@@ -75,6 +76,9 @@ iframe#frame.loaded{opacity:1}
   var sendLink=document.querySelector('.side-nav a, .shell-bottom a.shell-send');
   document.querySelectorAll('.shell-bottom a.shell-send').forEach(function(a){
     a.addEventListener('click',function(e){e.preventDefault();load('/console?send=1',false);});
+  });
+  document.querySelectorAll('.shell-bottom a.shell-model').forEach(function(a){
+    a.addEventListener('click',function(e){e.preventDefault();load('/console?model=1',false);});
   });
   frame.addEventListener('load',function(){
     try{

@@ -311,6 +311,9 @@
     if (active === 'console' && new URLSearchParams(location.search).has('send')) {
       setTimeout(() => { const button = document.getElementById('open-send'); if (button) button.click(); }, 700);
     }
+    if (active === 'console' && new URLSearchParams(location.search).has('model')) {
+      setTimeout(() => { const button = document.getElementById('open-model'); if (button) button.click(); }, 700);
+    }
   }
 
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', mount);
