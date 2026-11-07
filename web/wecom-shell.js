@@ -1,5 +1,5 @@
 'use strict';
-// 统一外壳：窄侧边栏（图标+文字：聊天/助手/导入导出/设置）+ 右侧内容区
+// 统一外壳：侧边栏在 HTML 里预渲染（首屏即完整），这里只做交互与兜底
 (() => {
   const pages = [
     { key: 'chat', label: '聊天', href: '/chat' },
@@ -12,8 +12,8 @@
     : path.startsWith('/console') ? 'console'
     : path.startsWith('/settings') ? 'settings' : 'data';
 
-  async function api(path) {
-    const response = await fetch(path, {cache: 'no-store'});
+  async function api(url) {
+    const response = await fetch(url, {cache: 'no-store'});
     const data = await response.json().catch(() => ({}));
     if (!response.ok) throw Error(data.detail || ('HTTP ' + response.status));
     return data;
@@ -24,130 +24,64 @@
     if (sidebar) return sidebar;
     sidebar = document.createElement('aside');
     sidebar.className = 'sidebar';
-    const main = document.createElement('div');
-    main.className = 'shell-main';
-    const notice = document.getElementById('notice');
-    const movable = Array.from(document.body.children)
-      .filter(el => el.tagName !== 'SCRIPT' && el !== notice && el !== sidebar);
-    movable.forEach(el => main.appendChild(el));
+    sidebar.innerHTML = '<div class="brand"><img src="/ui/wecom/wecom-logo.jpg" alt="faswecom"><h1>faswecom<span>企业微信</span></h1></div>'
+      + '<div class="rail-account"></div>'
+      + '<nav class="side-nav"></nav>'
+      + '<div class="shell-bottom"></div>';
     document.body.insertBefore(sidebar, document.body.firstChild);
-    document.body.insertBefore(main, sidebar.nextSibling);
     return sidebar;
   }
 
-  function buildRail(sidebar) {
-    // 品牌
+  function buildMissing(sidebar) {
     let brand = sidebar.querySelector('.brand');
     if (!brand) {
       brand = document.createElement('div');
       brand.className = 'brand';
+      brand.innerHTML = '<img src="/ui/wecom/wecom-logo.jpg" alt="faswecom"><h1>faswecom<span>企业微信</span></h1>';
+      sidebar.insertBefore(brand, sidebar.firstChild);
     }
-    if (!brand.querySelector('img')) {
-      const img = document.createElement('img');
-      img.src = '/ui/wecom/wecom-logo.jpg';
-      img.alt = 'faswecom';
-      brand.insertBefore(img, brand.firstChild);
-    }
-    const copy = brand.querySelector('.brand-copy');
-    if (copy) {
-      const h1 = document.createElement('h1');
-      h1.innerHTML = 'faswecom<span>企业微信</span>';
-      copy.replaceWith(h1);
-    }
-    if (!brand.querySelector('h1')) {
-      const h1 = document.createElement('h1');
-      h1.innerHTML = 'faswecom<span>企业微信</span>';
-      brand.appendChild(h1);
-    }
-
-    // 账号槽位（固定高度，保证切换页面位置不变）
     let slot = sidebar.querySelector('.rail-account');
     if (!slot) {
       slot = document.createElement('div');
       slot.className = 'rail-account';
+      brand.after(slot);
     }
-    let switcher = document.querySelector('.account-switcher');
-    if (switcher) slot.appendChild(switcher);
-
-    // 导航
-    const nav = document.createElement('nav');
-    nav.className = 'side-nav';
-    nav.innerHTML = pages.map(p =>
-      '<a href="' + p.href + '"' + (p.key === active ? ' class="active" aria-current="page"' : '') +
-      '><span class="dot"></span>' + p.label + '</a>').join('');
-
-    // 底部
-    const bottom = document.createElement('div');
-    bottom.className = 'shell-bottom';
-    const takeover = document.createElement('label');
-    takeover.className = 'takeover';
-    const takeoverBox = document.createElement('input');
-    takeoverBox.type = 'checkbox';
-    takeoverBox.id = 'rail-takeover';
-    const takeoverText = document.createElement('span');
-    takeoverText.textContent = '智能客服接管';
-    takeover.append(takeoverBox, takeoverText);
-    const takeoverState = document.createElement('p');
-    takeoverState.className = 'takeover-state';
-    takeoverState.id = 'rail-takeover-state';
-    takeoverState.textContent = '正在读取…';
-    bottom.append(takeover, takeoverState);
-    const applyTakeover = enabled => {
-      takeoverState.textContent = enabled ? '已接管：客户消息自动回复' : '已关闭：消息留给人工';
-    };
-    api('/api/wecom/console/status').then(data => {
-      const enabled = data.ai_takeover !== false;
-      takeoverBox.checked = enabled;
-      applyTakeover(enabled);
-    }).catch(() => { takeoverState.textContent = '状态读取失败'; });
-    takeoverBox.addEventListener('change', async () => {
-      const enabled = takeoverBox.checked;
-      takeoverBox.disabled = true;
-      try {
-        const response = await fetch('/api/wecom/console/ai-takeover', {
-          method: 'PUT',
-          headers: {'Content-Type': 'application/json', 'X-ChatWeave-UI': '1'},
-          body: JSON.stringify({enabled})
-        });
-        if (!response.ok) throw Error('切换失败');
-        applyTakeover(enabled);
-      } catch (error) {
-        takeoverBox.checked = !enabled;
-        takeoverState.textContent = '切换失败：' + error.message;
-      } finally {
-        takeoverBox.disabled = false;
-      }
-    });
-
-    const send = document.createElement('a');
-    send.href = '/console?send=1';
-    send.textContent = '发送权限设置';
-    send.addEventListener('click', event => {
-      const button = document.getElementById('open-send');
-      if (button) { event.preventDefault(); button.click(); }
-    });
-    bottom.appendChild(send);
-    const modelButton = document.getElementById('open-model');
-    if (modelButton) {
-      const model = document.createElement('a');
-      model.href = '/console';
-      model.textContent = '模型设置';
-      model.addEventListener('click', event => { event.preventDefault(); modelButton.click(); });
-      bottom.appendChild(model);
+    let nav = sidebar.querySelector('.side-nav');
+    if (!nav) {
+      nav = document.createElement('nav');
+      nav.className = 'side-nav';
+      slot.after(nav);
     }
-    const meta = document.createElement('p');
-    meta.className = 'meta';
-    meta.textContent = '本地运行 · 仅本机访问';
-    bottom.appendChild(meta);
-
-    // 统一顺序：品牌 → 账号 → 导航 → 底部
-    sidebar.append(brand, slot, nav, bottom);
-    sidebar.dataset.shellMounted = '1';
-
-    // 侧边栏与内容之间的拖动条
-    let splitter = sidebar.querySelector('.rail-splitter');
-    if (!splitter) {
-      splitter = document.createElement('div');
+    if (!nav.children.length) {
+      nav.innerHTML = pages.map(p =>
+        '<a href="' + p.href + '"' + (p.key === active ? ' class="active" aria-current="page"' : '') +
+        '><span class="dot"></span>' + p.label + '</a>').join('');
+    }
+    let bottom = sidebar.querySelector('.shell-bottom');
+    if (!bottom) {
+      bottom = document.createElement('div');
+      bottom.className = 'shell-bottom';
+      sidebar.appendChild(bottom);
+    }
+    if (!bottom.querySelector('.takeover')) {
+      const label = document.createElement('label');
+      label.className = 'takeover';
+      label.innerHTML = '<input type="checkbox" id="rail-takeover"><span>智能客服接管</span>';
+      const state = document.createElement('p');
+      state.className = 'takeover-state';
+      state.id = 'rail-takeover-state';
+      state.textContent = '正在读取…';
+      const send = document.createElement('a');
+      send.href = '/console?send=1';
+      send.className = 'shell-send';
+      send.textContent = '发送权限设置';
+      const meta = document.createElement('p');
+      meta.className = 'meta';
+      meta.textContent = '本地运行 · 仅本机访问';
+      bottom.append(label, state, send, meta);
+    }
+    if (!sidebar.querySelector('.rail-splitter')) {
+      const splitter = document.createElement('div');
       splitter.className = 'rail-splitter';
       splitter.setAttribute('role', 'separator');
       splitter.setAttribute('aria-orientation', 'vertical');
@@ -155,6 +89,69 @@
       splitter.title = '拖动调整侧边栏宽度';
       sidebar.appendChild(splitter);
     }
+  }
+
+  function wireAccount(sidebar) {
+    let slot = sidebar.querySelector('.rail-account');
+    if (!slot) return;
+    const switcher = document.querySelector('.account-switcher');
+    if (switcher && switcher.parentElement !== slot) slot.appendChild(switcher);
+  }
+
+  function wireTakeover(sidebar) {
+    const box = sidebar.querySelector('#rail-takeover');
+    const state = sidebar.querySelector('#rail-takeover-state');
+    if (!box || !state) return;
+    const apply = (enabled) => { state.textContent = enabled ? '已接管：客户消息自动回复' : '已关闭：消息留给人工'; };
+    api('/api/wecom/console/status').then(data => {
+      const enabled = data.ai_takeover !== false;
+      box.checked = enabled;
+      apply(enabled);
+    }).catch(() => { state.textContent = '状态读取失败'; });
+    box.addEventListener('change', async () => {
+      const enabled = box.checked;
+      box.disabled = true;
+      try {
+        const response = await fetch('/api/wecom/console/ai-takeover', {
+          method: 'PUT',
+          headers: {'Content-Type': 'application/json', 'X-ChatWeave-UI': '1'},
+          body: JSON.stringify({enabled})
+        });
+        if (!response.ok) throw Error('切换失败');
+        apply(enabled);
+      } catch (error) {
+        box.checked = !enabled;
+        state.textContent = '切换失败：' + error.message;
+      } finally {
+        box.disabled = false;
+      }
+    });
+  }
+
+  function wireBottom(sidebar) {
+    const send = sidebar.querySelector('.shell-send');
+    if (send) {
+      send.addEventListener('click', event => {
+        const button = document.getElementById('open-send');
+        if (button) { event.preventDefault(); button.click(); }
+      });
+    }
+    const modelButton = document.getElementById('open-model');
+    if (modelButton && !sidebar.querySelector('.shell-model')) {
+      const model = document.createElement('a');
+      model.href = '/console';
+      model.className = 'shell-model';
+      model.textContent = '模型设置';
+      model.addEventListener('click', event => { event.preventDefault(); modelButton.click(); });
+      const meta = sidebar.querySelector('.shell-bottom .meta');
+      if (meta) meta.before(model); else sidebar.querySelector('.shell-bottom')?.appendChild(model);
+    }
+  }
+
+  function wireRailSplitter(sidebar) {
+    const splitter = sidebar.querySelector('.rail-splitter');
+    if (!splitter || splitter.dataset.wired) return;
+    splitter.dataset.wired = '1';
     try {
       const saved = parseInt(localStorage.getItem('railW') || '', 10);
       if (saved >= 150 && saved <= 280) document.body.style.setProperty('--rail-w', saved + 'px');
@@ -173,8 +170,7 @@
       event.preventDefault();
     });
     splitter.addEventListener('pointermove', event => {
-      if (!dragging) return;
-      apply(event.clientX);
+      if (dragging) apply(event.clientX);
     });
     splitter.addEventListener('pointerup', () => {
       if (!dragging) return;
@@ -186,7 +182,7 @@
     splitter.addEventListener('keydown', event => {
       if (event.key !== 'ArrowLeft' && event.key !== 'ArrowRight') return;
       event.preventDefault();
-      const current = document.querySelector('.sidebar').getBoundingClientRect().width;
+      const current = sidebar.getBoundingClientRect().width;
       const next = apply(current + (event.key === 'ArrowRight' ? 16 : -16));
       try { localStorage.setItem('railW', String(next)); } catch (e) {}
     });
@@ -195,7 +191,8 @@
   function setupChatSplitter() {
     const splitter = document.getElementById('chat-splitter');
     const list = document.querySelector('.list-panel');
-    if (!splitter || !list) return;
+    if (!splitter || !list || splitter.dataset.wired) return;
+    splitter.dataset.wired = '1';
     try {
       const saved = parseInt(localStorage.getItem('chatListW') || '', 10);
       if (saved >= 220 && saved <= 420) document.body.style.setProperty('--chat-list-w', saved + 'px');
@@ -237,7 +234,8 @@
   function setupConsoleSplitter() {
     const splitter = document.getElementById('list-splitter');
     const list = document.querySelector('.list-panel');
-    if (!splitter || !list) return;
+    if (!splitter || !list || splitter.dataset.wired) return;
+    splitter.dataset.wired = '1';
     try {
       const saved = parseInt(localStorage.getItem('consoleListW') || '', 10);
       if (saved >= 200 && saved <= 560) document.body.style.setProperty('--console-list-w', saved + 'px');
@@ -280,7 +278,6 @@
     if (active !== 'console' || !document.getElementById('scope')) return;
     document.body.classList.add('scope-hidden');
     const scope = document.getElementById('scope');
-    // 左侧收起箭头
     if (!scope.querySelector('.scope-collapse')) {
       const collapse = document.createElement('button');
       collapse.type = 'button';
@@ -291,7 +288,6 @@
       collapse.addEventListener('click', () => document.body.classList.add('scope-hidden'));
       scope.appendChild(collapse);
     }
-    // 点击抽屉外任意位置收起
     document.addEventListener('pointerdown', event => {
       if (document.body.classList.contains('scope-hidden')) return;
       if (scope.contains(event.target)) return;
@@ -303,18 +299,11 @@
   function mount() {
     document.body.classList.add(active === 'console' ? 'shell-console' : active === 'chat' ? 'shell-chat' : 'shell-page');
     const sidebar = ensureSidebar();
-    buildRail(sidebar);
-    if (active === 'chat') {
-      const head = document.querySelector('.list-head');
-      if (head && !head.querySelector('.new-chat')) {
-        const newChat = document.createElement('button');
-        newChat.type = 'button';
-        newChat.className = 'new-chat';
-        newChat.textContent = '＋ 新对话';
-        newChat.addEventListener('click', () => { location.href = '/console'; });
-        head.appendChild(newChat);
-      }
-    }
+    buildMissing(sidebar);
+    wireAccount(sidebar);
+    wireTakeover(sidebar);
+    wireBottom(sidebar);
+    wireRailSplitter(sidebar);
     setupChatSplitter();
     setupConsoleSplitter();
     setupScope();

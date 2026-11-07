@@ -20,60 +20,93 @@ def publish_ready(runtime, ready, port, adapter_port):
     atomic_json(ready, dict(url=f'http://127.0.0.1:{port}', pid=os.getpid()))
 
 
-def center_launcher_window():
-    """把 launcher（faswecom.exe）的主窗口在首次显示时移动到屏幕中央。"""
+def _launcher_pid():
     try:
-        import psutil, win32api, win32con, win32gui, win32process
+        import psutil
     except Exception:
-        return
-    target = None
+        return None
     for proc in psutil.process_iter(['pid', 'name']):
         try:
             if (proc.info['name'] or '').lower() == 'faswecom.exe':
-                target = proc.info['pid']
-                break
+                return proc.info['pid']
         except Exception:
             continue
-    if target is None:
-        return
-    while True:
-        found = []
-        def visit(hwnd, _):
-            try:
-                if win32process.GetWindowThreadProcessId(hwnd)[1] != target:
-                    return True
-                if not win32gui.IsWindowVisible(hwnd) or win32gui.IsIconic(hwnd):
-                    return True
-                cls = win32gui.GetClassName(hwnd)
-                if not cls.startswith('WindowsForms10.Window.8') and 'faswecom' not in win32gui.GetWindowText(hwnd).lower():
-                    return True
-                left, top, right, bottom = win32gui.GetWindowRect(hwnd)
-                if right - left < 500 or bottom - top < 400:
-                    return True
-                found.append(hwnd)
-            except Exception:
-                pass
-            return True
+    return None
+
+
+def _launcher_window(pid, visible_only=False):
+    try:
+        import win32gui, win32process
+    except Exception:
+        return None
+    found = []
+    def visit(hwnd, _):
         try:
-            win32gui.EnumWindows(visit, None)
+            if win32process.GetWindowThreadProcessId(hwnd)[1] != pid:
+                return True
+            cls = win32gui.GetClassName(hwnd)
+            title = win32gui.GetWindowText(hwnd)
+            if not cls.startswith('WindowsForms10.Window.8') and 'faswecom' not in title.lower():
+                return True
+            if visible_only and (not win32gui.IsWindowVisible(hwnd) or win32gui.IsIconic(hwnd)):
+                return True
+            left, top, right, bottom = win32gui.GetWindowRect(hwnd)
+            if right - left < 500 or bottom - top < 400:
+                return True
+            found.append(hwnd)
         except Exception:
             pass
-        if found:
-            hwnd = found[0]
-            try:
-                left, top, right, bottom = win32gui.GetWindowRect(hwnd)
-                width, height = right - left, bottom - top
-                monitor = win32api.MonitorFromWindow(hwnd, win32con.MONITOR_DEFAULTTOPRIMARY)
-                work = win32api.GetMonitorInfo(monitor)['Work']
-                x = work[0] + (work[2] - work[0] - width) // 2
-                y = work[1] + (work[3] - work[1] - height) // 2
-                if (left, top) != (x, y):
-                    win32gui.SetWindowPos(hwnd, 0, x, y, 0, 0,
-                        win32con.SWP_NOSIZE | win32con.SWP_NOZORDER | win32con.SWP_NOACTIVATE)
-            except Exception:
-                pass
+        return True
+    try:
+        win32gui.EnumWindows(visit, None)
+    except Exception:
+        pass
+    return found[0] if found else None
+
+
+def center_window(hwnd):
+    try:
+        import win32api, win32con, win32gui
+    except Exception:
+        return
+    try:
+        left, top, right, bottom = win32gui.GetWindowRect(hwnd)
+        width, height = right - left, bottom - top
+        monitor = win32api.MonitorFromWindow(hwnd, win32con.MONITOR_DEFAULTTOPRIMARY)
+        work = win32api.GetMonitorInfo(monitor)['Work']
+        x = work[0] + (work[2] - work[0] - width) // 2
+        y = work[1] + (work[3] - work[1] - height) // 2
+        if (left, top) != (x, y):
+            win32gui.SetWindowPos(hwnd, 0, x, y, 0, 0,
+                win32con.SWP_NOSIZE | win32con.SWP_NOZORDER | win32con.SWP_NOACTIVATE)
+    except Exception:
+        pass
+
+
+def center_launcher_window_once():
+    """窗口显示前先摆到屏幕中央（部分启动器会在显示时再设位置，另有 watcher 兜底）。"""
+    pid = _launcher_pid()
+    if pid is None:
+        return None
+    for _ in range(40):
+        hwnd = _launcher_window(pid, visible_only=False)
+        if hwnd:
+            center_window(hwnd)
+            return (pid, hwnd)
+        time.sleep(0.1)
+    return None
+
+
+def watch_launcher_window(pid):
+    """高频轮询：窗口一出现就立刻居中，尽量做到肉眼看不到跳动。"""
+    for _ in range(4000):
+        hwnd = _launcher_window(pid, visible_only=True)
+        if hwnd:
+            for _ in range(6):
+                center_window(hwnd)
+                time.sleep(0.008)
             return
-        time.sleep(0.5)
+        time.sleep(0.005)
 
 
 def run_service():
@@ -127,6 +160,8 @@ def run_service():
         while not (server.started and adapter_server.started):
             if server.should_exit or adapter_server.should_exit: return
             time.sleep(.1)
+        # 窗口在发布 ready 之后才会显示，先把它摆到屏幕中央，避免出现“先左下角再跳到中间”
+        centered = center_launcher_window_once()
         # This state contains no token and is useful to local integration clients.
         try:
             publish_ready(DATA / 'wecom-runtime.json', ready, port, adapter_port)
@@ -135,7 +170,8 @@ def run_service():
             traceback.print_exc()
             server.should_exit=True
             return
-        threading.Thread(target=center_launcher_window, daemon=True).start()
+        if centered:
+            threading.Thread(target=watch_launcher_window, args=(centered[0],), daemon=True).start()
         import faulthandler
         faulthandler.cancel_dump_traceback_later()
         print('startup: service-listening %.3fs'%(time.monotonic()-started),file=sys.stderr,flush=True)

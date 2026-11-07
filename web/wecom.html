@@ -1,6 +1,24 @@
 <!doctype html>
-<html lang="zh-CN"><head><style>html{background:#f4f6f5}</style><script>document.documentElement.classList.add('shell-boot')</script><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>faswecom · 企业微信</title><link rel="icon" href="/ui/wecom/wecom-logo.jpg" type="image/jpeg"><link rel="stylesheet" href="/ui/wecom/wecom.css"><link rel="stylesheet" href="/ui/wecom/wecom-accounts.css"><link rel="stylesheet" href="/ui/wecom/wecom-export.css"><link rel="stylesheet" href="/ui/wecom/wecom-shell.css?v=20261107i"></head>
-<body><header><div class="brand"><img src="/ui/wecom/wecom-logo.jpg" alt="faswecom" width="44" height="44"><span>faswecom <b>企业微信</b></span></div><a class="badge" href="/console" target="_self" data-wecom-nav="console">← 返回操作台</a><a class="badge" href="/chat">聊天</a></header>
+<html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>faswecom · 企业微信</title><link rel="icon" href="/ui/wecom/wecom-logo.jpg" type="image/jpeg"><link rel="stylesheet" href="/ui/wecom/wecom.css"><link rel="stylesheet" href="/ui/wecom/wecom-accounts.css"><link rel="stylesheet" href="/ui/wecom/wecom-export.css"><link rel="stylesheet" href="/ui/wecom/wecom-shell.css?v=20261107j"></head>
+<body>
+<aside class="sidebar">
+<div class="brand"><img src="/ui/wecom/wecom-logo.jpg" alt="faswecom"><h1>faswecom<span>企业微信</span></h1></div>
+<div class="rail-account"></div>
+<nav class="side-nav">
+<a href="/chat"><span class="dot"></span>聊天</a>
+<a href="/console"><span class="dot"></span>助手</a>
+<a href="/" class="active"><span class="dot"></span>导入/导出</a>
+<a href="/settings"><span class="dot"></span>设置</a>
+</nav>
+<div class="shell-bottom">
+<label class="takeover"><input type="checkbox" id="rail-takeover"><span>智能客服接管</span></label>
+<p class="takeover-state" id="rail-takeover-state">正在读取…</p>
+<a href="/console?send=1" class="shell-send">发送权限设置</a>
+<p class="meta">本地运行 · 仅本机访问</p>
+</div>
+<div class="rail-splitter" role="separator" aria-orientation="vertical" tabindex="0" title="拖动调整侧边栏宽度"></div>
+</aside>
+<header><div class="brand"><img src="/ui/wecom/wecom-logo.jpg" alt="faswecom" width="44" height="44"><span>faswecom <b>企业微信</b></span></div><a class="badge" href="/console" target="_self" data-wecom-nav="console">← 返回操作台</a><a class="badge" href="/chat">聊天</a></header>
 <main><section class="intro"><p class="eyebrow">LOCAL COMMUNICATION WORKSPACE</p><h1>让工作对话，随时可查。</h1><p>从这台电脑的企业微信读取聊天，在本机检索，或连接你正在使用的 Agent。</p></section>
 <div class="stats"><div><strong id="message-count">—</strong><span>已导入消息</span></div><div><strong id="conversation-count">—</strong><span>会话</span></div><div><strong id="source-status">检测中</strong><span>读取器状态</span></div></div>
 <section class="panel"><div class="section-head"><div><p id="sync-state" role="status">正在连接同步服务…</p><p class="hint">自动同步已绑定账号的全部本机会话，包括新会话；每秒检查变化。下方会话与日期筛选用于手动导入。</p></div><button id="sync-toggle" class="secondary">暂停自动同步</button></div></section><section class="panel"><div class="section-head"><div><h2>数据与读取</h2><p>首次读取时保持企业微信已登录。重复导入会自动去重。</p></div><button id="detect" class="secondary">重新检测</button></div>
@@ -14,4 +32,4 @@
 <div><div class="source-row"><label>导出范围<select id="export-scope"><option value="all">当前类型的全部会话</option><option value="selected">已勾选会话</option></select></label><label>文件格式<select id="export-format"><option value="sqlite">SQLite 数据库</option><option value="jsonl">JSONL 消息记录</option></select></label></div><div class="source-row"><label>开始日期<input id="export-start" type="date"></label><label>结束日期<input id="export-end" type="date"></label></div><details><summary>增量导出</summary><label>从消息游标之后开始<input id="export-cursor" type="number" min="0" step="1" value="0"></label><p class="hint">0 表示全量。增量导出请保持相同账号和筛选范围；数据库重建后从 0 开始。</p></details><div class="export-toolbar"><button id="export-preview-button" class="secondary">预览数据集</button></div><div class="export-preview"><h3>导出预览</h3><strong id="export-preview-count">—</strong><p id="export-preview-note">选择范围后，预览消息数量和最近 5 条原文。</p><div id="export-samples" class="export-samples"></div></div></div></div>
 <p class="hint">包含消息文本、会话、发送者、时间和原始消息编号。非文本消息保留占位；不包含附件原文件、模型密钥或发送权限。</p><div class="export-toolbar"><button id="export-create">开始导出</button><button id="export-cancel" class="secondary" hidden>取消导出</button></div><progress id="export-progress" class="export-progress" hidden></progress><p id="export-state" role="status" aria-live="polite">导出过程可查看进度，生成后另存到指定位置。</p><div id="export-files"></div></section>
 
-<footer>faswecom 企业微信适配版 · 本地存储 · Windows 5.0.11.6029 / 5.0.12.6018 / 5.0.13.6005 x86 已验证</footer></main><div id="notice" role="alert" hidden></div><script src="/ui/wecom/wecom-accounts.js"></script><script src="/ui/wecom/wecom.js"></script><script src="/ui/wecom/wecom-export.js"></script><script src="/ui/wecom/wecom-sync.js"></script><script src="/ui/wecom/wecom-navigation.js"></script><script src="/ui/wecom/wecom-shell.js?v=20261107i"></script></body></html>
+<footer>faswecom 企业微信适配版 · 本地存储 · Windows 5.0.11.6029 / 5.0.12.6018 / 5.0.13.6005 x86 已验证</footer></main><div id="notice" role="alert" hidden></div><script src="/ui/wecom/wecom-accounts.js"></script><script src="/ui/wecom/wecom.js"></script><script src="/ui/wecom/wecom-export.js"></script><script src="/ui/wecom/wecom-sync.js"></script><script src="/ui/wecom/wecom-navigation.js"></script><script src="/ui/wecom/wecom-shell.js?v=20261107j"></script></body></html>

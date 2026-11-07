@@ -79,3 +79,4 @@ body.shell-page main{padding:16px 22px 40px;max-width:1080px}
 body.shell-page .panel,body.shell-page .stats>div{background:#fff;border:1px solid var(--shell-line)}
 body.shell-page{color-scheme:light}
 body.shell-chat:not(.chat-open) .chat-composer{display:none}
+body.shell-page main{overflow-y:auto;min-height:0}
